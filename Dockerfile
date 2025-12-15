@@ -39,9 +39,23 @@ RUN java -Djarmode=layertools -jar application.jar extract
 
 # ===================================================================================
 # STAGE 3: The Final Image
-# - Uses a minimal Java Runtime Environment (JRE), not a full JDK.
-# - Copies the extracted layers in the correct order for optimal caching.
 # ===================================================================================
 FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
+
+# 1. Copy the extracted layers from the extractor stage.
+# The order matters for caching!
+# 'dependencies' change least often, 'application' changes most often.
+COPY --from=extractor /app/dependencies/ ./
+COPY --from=extractor /app/spring-boot-loader/ ./
+COPY --from=extractor /app/snapshot-dependencies/ ./
+COPY --from=extractor /app/application/ ./
+
+# 2. Define the Entrypoint
+# We use JarLauncher instead of 'java -jar' because the JAR is unpacked.
+#
+# IMPORTANT:
+# - For Spring Boot 3.2+ (Java 21 default): Use "org.springframework.boot.loader.launch.JarLauncher"
+# - For Spring Boot < 3.2: Use "org.springframework.boot.loader.JarLauncher"
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

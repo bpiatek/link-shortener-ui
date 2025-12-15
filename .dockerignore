@@ -5,3 +5,8 @@ target/
 .idea/
 *.iml
 .env
+.git
+.gitignore
+README.md
+Dockerfile
+.mvn/wrapper/maven-wrapper.jar
