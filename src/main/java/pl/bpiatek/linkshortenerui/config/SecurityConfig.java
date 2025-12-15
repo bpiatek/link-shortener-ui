@@ -39,8 +39,7 @@ class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .securityContext(AbstractHttpConfigurer::disable)
-                .requestCache(AbstractHttpConfigurer::disable)
-                .oauth2ResourceServer(AbstractHttpConfigurer::disable);
+                .requestCache(AbstractHttpConfigurer::disable);
 
         return http.build();
     }
