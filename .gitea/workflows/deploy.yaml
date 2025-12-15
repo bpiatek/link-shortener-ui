@@ -16,30 +16,71 @@ jobs:
   build-and-deploy:
     name: Build and Deploy to ${{ github.event.inputs.environment }}
     runs-on: java21-build
-    env:
-      DOCKER_BUILDKIT: 1
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-
-      - name: Get Image Tag and Name
-        id: image_info
+      - name: Show Current User and Groups
         run: |
-          echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-          echo "name=link-shortener-redirect-service" >> $GITHUB_OUTPUT
+          id
+          groups
+
+      - name: Package with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Get Image Tag
+        id: get_tag
+        run: |
+          TAG=$(git rev-parse --short HEAD)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Image tag set to $TAG"
+
+      - name: Define Image Name
+        id: image_name
+        run: |
+          NAME=link-shortener-ui
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+          echo "Image name set to $NAME"
 
       - name: Build Docker Image
         run: |
-          docker build \
-            -t ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }} .
-          echo "Docker image built: ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }}"
+          docker build -t ${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }} .
+          echo "Docker image built: ${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }}"
+
+      - name: Verify microk8s availability and version
+        run: |
+          echo "PATH is $PATH"
+          microk8s status --wait-ready
+          microk8s version
+
+      - name: Debug PATH and microk8s path
+        run: |
+          echo $PATH
+          which microk8s
+          ls -l /snap/bin/microk8s
+          ls -l /usr/bin/snap
+          snap list
+
+      - name: Verify Docker Image Exists Before Import
+        run: |
+          echo "Checking if Docker image exists..."
+          docker image ls | grep ${{ steps.image_name.outputs.name }} | grep ${{ steps.get_tag.outputs.tag }}
+          echo "✅ Docker image is present"
 
       - name: Import Image into MicroK8s
         run: |
-          docker save ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }} | sudo /snap/bin/microk8s ctr image import -
-          echo "Image imported into MicroK8s."
+          echo "Importing image into microk8s..."
+          echo "${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }}"
+          set -x
+          docker save ${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }} | sudo /snap/bin/microk8s ctr image import -
+          echo "✅ Image import completed"
+
+      - name: Debug MicroK8s Helm Access
+        run: |
+          set -x
+          sudo /snap/bin/microk8s status --wait-ready --timeout 30
+          sudo /snap/bin/microk8s helm version || echo "helm version failed"
 
       - name: Run Helm Upgrade
         run: |
@@ -50,7 +91,7 @@ jobs:
             ./helm \
             --namespace ${{ github.event.inputs.environment }} \
             --values helm/values-${{ github.event.inputs.environment }}.yaml \
-            --set image.repository=${{ steps.image_info.outputs.name }} \
-            --set image.tag=${{ steps.image_info.outputs.tag }} \
+            --set image.repository=${{ steps.image_name.outputs.name }} \
+            --set image.tag=${{ steps.get_tag.outputs.tag }} \
             --set spring.profiles.active=${{ github.event.inputs.environment }}
-          echo "Helm deployment finished."
+          echo "Helm deployment finished"
