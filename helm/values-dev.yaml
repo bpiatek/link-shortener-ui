@@ -1,0 +1,25 @@
+replicaCount: 1
+
+spring:
+  profiles:
+    active: "dev"
+env:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+
+vault:
+  role: link-shortener-user-service-dev-role
+  secretPath: kv/data/dev/link-shortener-user-service/config
+  secretTemplate: |
+    {{- with secret "kv/data/dev/link-shortener-user-service/config" -}}
+    {{- range $key, $value := .Data.data }}
+    {{ $key }}={{ $value }}
+    {{- end }}
+    {{- end }}
+  extraSecrets:
+    jwtkeyjson:
+      secretPath: kv/data/dev/link-shortener-user-service/jwt
+      secretTemplate: |
+        {{- with secret "kv/data/dev/link-shortener-user-service/jwt" -}}
+        {{- .Data.data | toJSON -}}
+        {{- end -}}
