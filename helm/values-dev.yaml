@@ -8,18 +8,11 @@ env:
     value: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
 
 vault:
-  role: link-shortener-user-service-dev-role
-  secretPath: kv/data/dev/link-shortener-user-service/config
+  role: link-shortener-ui-dev-role
+  secretPath: kv/data/dev/link-shortener-ui/config
   secretTemplate: |
-    {{- with secret "kv/data/dev/link-shortener-user-service/config" -}}
+    {{- with secret "kv/data/dev/link-shortener-ui/config" -}}
     {{- range $key, $value := .Data.data }}
     {{ $key }}={{ $value }}
     {{- end }}
     {{- end }}
-  extraSecrets:
-    jwtkeyjson:
-      secretPath: kv/data/dev/link-shortener-user-service/jwt
-      secretTemplate: |
-        {{- with secret "kv/data/dev/link-shortener-user-service/jwt" -}}
-        {{- .Data.data | toJSON -}}
-        {{- end -}}

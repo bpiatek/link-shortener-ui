@@ -1,2 +1,4 @@
-package pl.bpiatek.linkshortenerui.dto;record RegisterRequest() {
-}
+package pl.bpiatek.linkshortenerui.dto;
+
+public record RegisterRequest(String email, String password) {}
+

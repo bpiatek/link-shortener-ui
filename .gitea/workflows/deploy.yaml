@@ -23,22 +23,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Create Maven settings.xml for Docker build
-        run: |
-          SETTINGS_FILE="settings.xml"
-          echo "<settings xmlns='http://maven.apache.org/SETTINGS/1.0.0'
-                xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-                xsi:schemaLocation='http://maven.apache.org/SETTINGS/1.0.0
-                                    https://maven.apache.org/xsd/settings-1.0.0.xsd'>
-              <servers>
-                <server>
-                  <id>reposilite</id>
-                  <username>${{ secrets.REPOSILITE_USERNAME }}</username>
-                  <password>${{ secrets.REPOSILITE_PASSWORD }}</password>
-                </server>
-              </servers>
-            </settings>" > "$SETTINGS_FILE"
-          echo "Maven settings.xml for Docker created."
 
       - name: Get Image Tag and Name
         id: image_info
@@ -49,15 +33,8 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build \
-            --secret id=maven-settings,src=settings.xml \
             -t ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }} .
           echo "Docker image built: ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }}"
-
-      - name: Clean up Maven settings.xml
-        if: always()
-        run: |
-          rm settings.xml
-          echo "Cleaned up temporary settings.xml"
 
       - name: Import Image into MicroK8s
         run: |
@@ -69,7 +46,7 @@ jobs:
           set -euo pipefail
           echo "Deploying with Helm..."
           sudo /snap/bin/microk8s helm upgrade --install \
-            link-shortener-user-service-${{ github.event.inputs.environment }} \
+            link-shortener-ui-${{ github.event.inputs.environment }} \
             ./helm \
             --namespace ${{ github.event.inputs.environment }} \
             --values helm/values-${{ github.event.inputs.environment }}.yaml \

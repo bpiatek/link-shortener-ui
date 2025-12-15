@@ -8,10 +8,10 @@ env:
     value: "-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
 
 vault:
-  role: link-shortener-user-service-prod-role
-  secretPath: kv/data/prod/link-shortener-user-service/config
+  role: link-shortener-ui-prod-role
+  secretPath: kv/data/prod/link-shortener-ui/config
   secretTemplate: |
-    {{- with secret "kv/data/prod/link-shortener-user-service/config" -}}
+    {{- with secret "kv/data/prod/link-shortener-ui/config" -}}
     {{- range $key, $value := .Data.data }}
     {{ $key }}={{ $value }}
     {{- end }}

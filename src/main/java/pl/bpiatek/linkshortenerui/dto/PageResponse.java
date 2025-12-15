@@ -1,2 +1,11 @@
-package pl.bpiatek.linkshortenerui.dto;class PageResponse {
-}
+package pl.bpiatek.linkshortenerui.dto;
+
+import java.util.List;
+
+public record PageResponse<T>(
+        List<T> content,
+        int page,
+        int size,
+        long totalElements,
+        int totalPages
+) {}

@@ -28,7 +28,7 @@
 
     <!-- === File Appender for SBA === -->
     <appender name="SBA_FILE" class="ch.qos.logback.core.FileAppender">
-        <file>/tmp/user-service.log</file>
+        <file>/tmp/log.log</file>
         <append>true</append>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [${springAppName:-},%X{traceId:-},%X{spanId:-}] [%thread] %logger{36} - %msg%n</pattern>

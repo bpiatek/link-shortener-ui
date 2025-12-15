@@ -1,10 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
 <body>
-$END$
+<div layout:fragment="content">
+
+  <h1 class="text-2xl font-bold mb-4">My Links</h1>
+
+  <!-- Link Table -->
+  <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <table class="min-w-full leading-normal">
+      <thead>
+      <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
+        <th class="py-3 px-6 text-left">Alias</th>
+        <th class="py-3 px-6 text-left">Original URL</th>
+        <th class="py-3 px-6 text-center">Clicks</th>
+        <th class="py-3 px-6 text-center">Created</th>
+        <th class="py-3 px-6 text-center">Status</th>
+      </tr>
+      </thead>
+      <tbody class="text-gray-600 text-sm font-light">
+      <tr th:each="link : ${page.content}" class="border-b border-gray-200 hover:bg-gray-50">
+        <td class="py-3 px-6 text-left whitespace-nowrap">
+          <span class="font-medium" th:text="${link.shortUrl}">alias</span>
+        </td>
+        <td class="py-3 px-6 text-left">
+          <div class="truncate w-64" th:text="${link.longUrl}">https://...</div>
+        </td>
+        <td class="py-3 px-6 text-center">
+          <span th:text="${link.totalClicks}">0</span>
+        </td>
+        <td class="py-3 px-6 text-center">
+          <!-- Format Instant nicely -->
+          <span th:text="${#dates.format(link.createdAt, 'yyyy-MM-dd HH:mm')}">Date</span>
+        </td>
+        <td class="py-3 px-6 text-center">
+          <span th:if="${link.isActive}" class="bg-green-200 text-green-600 py-1 px-3 rounded-full text-xs">Active</span>
+          <span th:unless="${link.isActive}" class="bg-red-200 text-red-600 py-1 px-3 rounded-full text-xs">Inactive</span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  <!-- hx-boost makes these links load via AJAX automatically -->
+  <div class="mt-4 flex justify-between items-center" hx-boost="true">
+
+    <!-- Previous Button -->
+    <div>
+      <a th:if="${page.page > 0}"
+         th:href="@{/(page=${page.page - 1})}"
+         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
+        Previous
+      </a>
+      <span th:unless="${page.page > 0}"
+            class="bg-gray-200 text-gray-400 font-bold py-2 px-4 rounded-l cursor-not-allowed">
+                Previous
+            </span>
+    </div>
+
+    <!-- Page Info -->
+    <span class="text-gray-600">
+            Page <span th:text="${page.page + 1}">1</span> of <span th:text="${page.totalPages}">10</span>
+        </span>
+
+    <!-- Next Button -->
+    <div>
+      <a th:if="${page.page < page.totalPages - 1}"
+         th:href="@{/(page=${page.page + 1})}"
+         class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+        Next
+      </a>
+      <span th:unless="${page.page < page.totalPages - 1}"
+            class="bg-gray-200 text-gray-400 font-bold py-2 px-4 rounded-r cursor-not-allowed">
+                Next
+            </span>
+    </div>
+  </div>
+
+</div>
 </body>
 </html>

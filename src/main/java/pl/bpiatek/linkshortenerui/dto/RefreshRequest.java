@@ -1,2 +1,4 @@
-package pl.bpiatek.linkshortenerui.dto;record RefreshRequest() {
+package pl.bpiatek.linkshortenerui.dto;
+
+public record RefreshRequest(String refreshToken) {
 }

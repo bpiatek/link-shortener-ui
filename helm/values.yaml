@@ -1,12 +1,12 @@
 replicaCount: 1
 
 image:
-  repository: link-shortener-user-service
+  repository: link-shortener-ui
   pullPolicy: IfNotPresent
   tag: "latest"
 
 serviceAccount:
-  name: link-shortener-user-service
+  name: link-shortener-ui
 
 spring:
   profiles:
