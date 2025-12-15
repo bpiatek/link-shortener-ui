@@ -22,11 +22,6 @@ spec:
         vault.hashicorp.com/agent-inject-template-application.properties: |
           {{- .Values.vault.secretTemplate | nindent 10 }}
 
-        {{- range $filename, $config := .Values.vault.extraSecrets }}
-        vault.hashicorp.com/agent-inject-secret-{{ $filename }}: {{ $config.secretPath | quote }}
-        vault.hashicorp.com/agent-inject-template-{{ $filename }}: |
-          {{- $config.secretTemplate | nindent 10 }}
-        {{- end }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
       containers:
