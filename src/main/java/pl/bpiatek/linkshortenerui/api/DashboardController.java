@@ -55,7 +55,7 @@ class DashboardController {
     String createLink(
             @RequestParam String longUrl,
             @RequestParam(required = false) String shortUrl,
-            @RequestParam(defaultValue = "true") boolean isActive,
+            @RequestParam(defaultValue = "false") boolean isActive,
             @RequestParam(required = false) String title,
             Model model
     ) {
