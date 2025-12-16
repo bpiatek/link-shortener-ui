@@ -18,7 +18,7 @@ import pl.bpiatek.linkshortenerui.dto.LoginResponse;
 import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
 import pl.bpiatek.linkshortenerui.dto.ResetPasswordBackendRequest;
-import pl.bpiatek.linkshortenerui.dto.ResetPasswordForm;
+import pl.bpiatek.linkshortenerui.dto.ResetPasswordRequest;
 import pl.bpiatek.linkshortenerui.exception.ApiError;
 
 import java.net.URLEncoder;
@@ -177,13 +177,13 @@ class AuthController {
     @GetMapping("/reset-password")
     String resetPasswordPage(@RequestParam("token") String token, Model model) {
         // Pre-fill the token in the form object so it can be put into a hidden input
-        model.addAttribute("resetPasswordForm", new ResetPasswordForm(token, "", ""));
+        model.addAttribute("resetPasswordForm", new ResetPasswordRequest(token, "", ""));
         return "reset-password";
     }
 
     @PostMapping("/reset-password")
     String performResetPassword(
-            @ModelAttribute ResetPasswordForm form,
+            @ModelAttribute ResetPasswordRequest form,
             BindingResult bindingResult,
             Model model
     ) {
