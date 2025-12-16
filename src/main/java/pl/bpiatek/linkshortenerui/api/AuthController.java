@@ -218,7 +218,7 @@ class AuthController {
         }
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/sign-out")
     String performLogout(
             @CookieValue(value = "refresh_jwt", required = false) String refreshToken,
             HttpServletResponse response
