@@ -17,6 +17,7 @@ import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
 import pl.bpiatek.linkshortenerui.exception.ApiError;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Controller
@@ -30,7 +31,7 @@ class AuthController {
 
     @GetMapping("/register")
     String registerPage(Model model) {
-        // Empty object for the form binding
+        // Add empty object for form binding
         model.addAttribute("registerRequest", new RegisterRequest("", "", ""));
         return "register";
     }
@@ -41,26 +42,22 @@ class AuthController {
             BindingResult bindingResult,
             Model model
     ) {
-        if (!Objects.equals(request.password(), request.confirmPassword())) {
-            bindingResult.rejectValue(
-                    "confirmPassword",
-                    "password.mismatch",
-                    "Passwords do not match"
-            );
-        }
-
-        if (bindingResult.hasErrors()) {
+        if (!request.password().equals(request.confirmPassword())) {
+            bindingResult.rejectValue("confirmPassword", "mismatch", "Passwords do not match");
             return "register";
         }
 
+        if (bindingResult.hasErrors()) {
+            return "register"; // Client-side validation failed
+        }
+
         try {
+            var backendRequest = new RegisterBackendRequest(request.email(), request.password());
+
             apiGatewayClient.post()
                     .uri("/users/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new RegisterBackendRequest(
-                            request.email(),
-                            request.password()
-                    ))
+                    .body(backendRequest)
                     .retrieve()
                     .toBodilessEntity();
 
@@ -68,6 +65,9 @@ class AuthController {
 
         } catch (HttpClientErrorException e) {
             handleBackendError(e, bindingResult, model);
+            return "register";
+        } catch (Exception e) {
+            model.addAttribute("error", "An unexpected error occurred. Please try again.");
             return "register";
         }
     }

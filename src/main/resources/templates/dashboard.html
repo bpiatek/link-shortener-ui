@@ -14,15 +14,10 @@
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
   <style>
-    body {
-      background-color: #f8f9fa;
-    }
-    .table-responsive {
-      border-radius: 0.5rem;
-    }
-    .short-url {
-      font-family: monospace;
-    }
+    body { background-color: #f8f9fa; }
+    .table-responsive { border-radius: 0.5rem; }
+    .short-url { font-family: monospace; }
+    .copy-btn { font-size: 0.8rem; padding: 0.25rem 0.5rem; }
   </style>
 </head>
 
@@ -31,13 +26,9 @@
 <!-- Top Navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
   <div class="container-fluid">
-    <a class="navbar-brand fw-bold" href="/">
-      Link Shortener
-    </a>
+    <a class="navbar-brand fw-bold" href="/">Link Shortener</a>
     <div class="ms-auto">
-      <a href="/logout" class="btn btn-outline-light btn-sm">
-        Log out
-      </a>
+      <a href="/logout" class="btn btn-outline-light btn-sm">Log out</a>
     </div>
   </div>
 </nav>
@@ -46,9 +37,7 @@
 
   <!-- Header -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
-    <h1 class="h4 fw-bold mb-2 mb-md-0">
-      Your links
-    </h1>
+    <h1 class="h4 fw-bold mb-2 mb-md-0">Your links</h1>
   </div>
 
   <!-- Links Table -->
@@ -66,31 +55,29 @@
           </thead>
           <tbody>
           <tr th:each="link : ${page.content}">
-            <td class="short-url">
+            <td class="short-url d-flex align-items-center gap-2">
               <a th:href="@{/{code}(code=${link.shortCode})}"
                  th:text="${link.shortCode}"
                  target="_blank">
               </a>
+              <button type="button"
+                      class="btn btn-outline-secondary btn-sm copy-btn"
+                      th:attr="data-clipboard-text=@{/{code}(code=${link.shortCode})}"
+                      onclick="copyToClipboard(this)">
+                Copy
+              </button>
             </td>
 
-            <td class="text-truncate d-none d-md-table-cell"
-                style="max-width: 300px"
+            <td class="text-truncate d-none d-md-table-cell" style="max-width: 300px"
                 th:text="${link.originalUrl}">
             </td>
 
-            <td class="text-center"
-                th:text="${link.clickCount}">
-            </td>
-
-            <td class="text-end"
-                th:text="${#temporals.format(link.createdAt, 'yyyy-MM-dd HH:mm')}">
-            </td>
+            <td class="text-center" th:text="${link.clickCount}"></td>
+            <td class="text-end" th:text="${#temporals.format(link.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
           </tr>
 
           <tr th:if="${page.content.empty}">
-            <td colspan="4" class="text-center text-muted py-4">
-              No links yet.
-            </td>
+            <td colspan="4" class="text-center text-muted py-4">No links yet.</td>
           </tr>
           </tbody>
         </table>
@@ -101,32 +88,36 @@
   <!-- Pagination -->
   <nav th:if="${page.totalPages > 1}" class="mt-4">
     <ul class="pagination justify-content-center">
-
       <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-        <a class="page-link"
-           th:href="@{/dashboard(page=${page.number - 1}, size=${page.size})}">
-          Previous
-        </a>
+        <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, size=${page.size})}">Previous</a>
       </li>
 
       <li class="page-item disabled">
-                <span class="page-link">
-                    Page <span th:text="${page.number + 1}"></span>
-                    of <span th:text="${page.totalPages}"></span>
-                </span>
+        <span class="page-link">
+          Page <span th:text="${page.number + 1}"></span> of <span th:text="${page.totalPages}"></span>
+        </span>
       </li>
 
       <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-        <a class="page-link"
-           th:href="@{/dashboard(page=${page.number + 1}, size=${page.size})}">
-          Next
-        </a>
+        <a class="page-link" th:href="@{/dashboard(page=${page.number + 1}, size=${page.size})}">Next</a>
       </li>
-
     </ul>
   </nav>
 
 </div>
+
+<script>
+  function copyToClipboard(button) {
+    const text = button.getAttribute('data-clipboard-text');
+    navigator.clipboard.writeText(text).then(() => {
+      button.textContent = 'Copied!';
+      setTimeout(() => button.textContent = 'Copy', 1000);
+    }).catch(err => {
+      console.error('Copy failed', err);
+      button.textContent = 'Error';
+    });
+  }
+</script>
 
 </body>
 </html>
