@@ -4,8 +4,11 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClient;
+import pl.bpiatek.linkshortenerui.dto.CreateLinkRequest;
+import pl.bpiatek.linkshortenerui.dto.CreateLinkResponse;
 import pl.bpiatek.linkshortenerui.dto.LinkDto;
 import pl.bpiatek.linkshortenerui.dto.PageResponse;
 
@@ -46,5 +49,26 @@ class DashboardController {
 
         model.addAttribute("page", linkPage);
         return "dashboard";
+    }
+
+    @PostMapping("/dashboard/links")
+    String createLink(
+            @RequestParam String longUrl,
+            @RequestParam(required = false) String shortUrl,
+            @RequestParam(defaultValue = "true") boolean isActive,
+            @RequestParam(required = false) String title,
+            Model model
+    ) {
+        var request = new CreateLinkRequest(longUrl, shortUrl, isActive, title);
+
+        backendApi.execute(userJwt -> restClient.post()
+                .uri("/links")
+                .header("Authorization", "Bearer " + userJwt)
+                .body(request)
+                .retrieve()
+                .body(CreateLinkResponse.class)
+        );
+
+        return "redirect:/dashboard";
     }
 }
