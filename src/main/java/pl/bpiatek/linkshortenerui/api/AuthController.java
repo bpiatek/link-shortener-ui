@@ -98,7 +98,7 @@ class AuthController {
             setJwtCookie(response, "jwt", tokenResponse.accessToken(), 900);
             setJwtCookie(response, "refresh_jwt", tokenResponse.refreshToken(), 604800);
 
-            return "redirect:/";
+            return "redirect:/dashboard";
 
         } catch (HttpClientErrorException e) {
             // 3. Handle Errors (401, 404, 400)
