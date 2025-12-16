@@ -181,7 +181,6 @@ class AuthController {
         return "reset-password";
     }
 
-    // 2. Handle the Form Submission
     @PostMapping("/reset-password")
     String performResetPassword(
             @ModelAttribute ResetPasswordForm form,
