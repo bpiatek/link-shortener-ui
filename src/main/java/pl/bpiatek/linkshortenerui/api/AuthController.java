@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.client.RestClient;
 import pl.bpiatek.linkshortenerui.dto.ForgotPasswordRequest;
 import pl.bpiatek.linkshortenerui.dto.LoginRequest;
 import pl.bpiatek.linkshortenerui.dto.LoginResponse;
+import pl.bpiatek.linkshortenerui.dto.LogoutRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
 import pl.bpiatek.linkshortenerui.dto.ResetPasswordBackendRequest;
@@ -213,6 +215,30 @@ class AuthController {
         }
     }
 
+    @PostMapping("/logout")
+    String performLogout(
+            @CookieValue(value = "refresh_jwt", required = false) String refreshToken,
+            HttpServletResponse response
+    ) {
+        if (refreshToken != null) {
+            try {
+                apiGatewayClient.post()
+                        .uri("/users/auth/logout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .body(new LogoutRequest(refreshToken))
+                        .retrieve()
+                        .toBodilessEntity();
+            } catch (Exception ignored) {
+
+            }
+        }
+
+        clearCookie(response, "jwt");
+        clearCookie(response, "refresh_jwt");
+
+        return "redirect:/login?logout=true";
+    }
+
     private void handleBackendError(HttpClientErrorException e, BindingResult bindingResult, Model model) {
         try {
             // 1. Parse the JSON body from the exception
@@ -247,6 +273,15 @@ class AuthController {
         cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(maxAge);
+        response.addCookie(cookie);
+    }
+
+    private void clearCookie(HttpServletResponse response, String name) {
+        Cookie cookie = new Cookie(name, null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
 }
