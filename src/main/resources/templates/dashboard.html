@@ -80,7 +80,11 @@
     </a>
 
     <div class="ms-auto">
-      <a href="/logout" class="btn btn-outline-danger btn-sm fw-bold px-3 rounded-pill">Log out</a>
+      <form th:action="@{/logout}" method="post">
+        <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3 rounded-pill">
+          Log out
+        </button>
+      </form>
     </div>
   </div>
 </nav>
