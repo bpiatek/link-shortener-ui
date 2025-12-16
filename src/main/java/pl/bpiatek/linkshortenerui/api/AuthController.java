@@ -13,8 +13,11 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import pl.bpiatek.linkshortenerui.dto.LoginRequest;
 import pl.bpiatek.linkshortenerui.dto.LoginResponse;
+import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
 import pl.bpiatek.linkshortenerui.exception.ApiError;
+
+import java.util.Objects;
 
 @Controller
 class AuthController {
@@ -28,25 +31,36 @@ class AuthController {
     @GetMapping("/register")
     String registerPage(Model model) {
         // Empty object for the form binding
-        model.addAttribute("registerRequest", new RegisterRequest("", ""));
+        model.addAttribute("registerRequest", new RegisterRequest("", "", ""));
         return "register";
     }
 
     @PostMapping("/register")
     String performRegister(
             @ModelAttribute RegisterRequest request,
-            BindingResult bindingResult, // Inject BindingResult to manually add backend errors
+            BindingResult bindingResult,
             Model model
     ) {
+        if (!Objects.equals(request.password(), request.confirmPassword())) {
+            bindingResult.rejectValue(
+                    "confirmPassword",
+                    "password.mismatch",
+                    "Passwords do not match"
+            );
+        }
+
         if (bindingResult.hasErrors()) {
-            return "register"; // Client-side validation failed (if you have annotations on RegisterRequest)
+            return "register";
         }
 
         try {
             apiGatewayClient.post()
                     .uri("/users/auth/register")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
+                    .body(new RegisterBackendRequest(
+                            request.email(),
+                            request.password()
+                    ))
                     .retrieve()
                     .toBodilessEntity();
 
@@ -54,9 +68,6 @@ class AuthController {
 
         } catch (HttpClientErrorException e) {
             handleBackendError(e, bindingResult, model);
-            return "register";
-        } catch (Exception e) {
-            model.addAttribute("error", "An unexpected error occurred. Please try again.");
             return "register";
         }
     }

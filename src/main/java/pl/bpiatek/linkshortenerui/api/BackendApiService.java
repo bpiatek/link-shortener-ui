@@ -3,6 +3,7 @@ package pl.bpiatek.linkshortenerui.api;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -37,14 +38,14 @@ public class BackendApiService {
     public <T> T execute(Function<String, T> apiCall) {
         String accessToken = getCookieValue("jwt");
 
+        if (accessToken == null || accessToken.isBlank()) {
+            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
+        }
+
         try {
-            // 1. Try with current access token
             return apiCall.apply(accessToken);
         } catch (HttpClientErrorException.Unauthorized e) {
-            // 2. If 401, try to refresh
             String newAccessToken = performRefresh();
-
-            // 3. Retry with new access token
             return apiCall.apply(newAccessToken);
         }
     }

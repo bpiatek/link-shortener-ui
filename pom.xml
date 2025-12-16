@@ -84,15 +84,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <image>
-                        <!-- Force AMD64 build -->
-                        <buildpacks>
-                            <buildpack>gcr.io/paketo-buildpacks/java:latest</buildpack>
-                        </buildpacks>
-                        <env>
-                            <BP_JVM_VERSION>21</BP_JVM_VERSION>
-                        </env>
-                    </image>
                     <layers>
                         <enabled>true</enabled>
                     </layers>

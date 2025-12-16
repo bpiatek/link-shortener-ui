@@ -20,7 +20,7 @@ class DashboardController {
         this.restClient = restClient;
     }
 
-    @GetMapping("/")
+    @GetMapping("/dashboard")
     String dashboard(
             Model model,
             @RequestParam(defaultValue = "0") int page,
