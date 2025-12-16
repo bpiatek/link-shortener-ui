@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import pl.bpiatek.linkshortenerui.dto.LoginRequest;
@@ -107,6 +108,29 @@ class AuthController {
         } catch (Exception e) {
             model.addAttribute("error", "Login failed. Please try again.");
             return "login";
+        }
+    }
+
+    @GetMapping("/verify")
+    String verifyEmail(@RequestParam("token") String token, Model model) {
+        try {
+            // 1. Call Backend API via Gateway
+            // The Gateway route /users/** strips prefix, so we call /users/auth/verify
+            apiGatewayClient.get()
+                    .uri("/users/auth/verify?token={token}", token)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            // 2. Success: Render the success page
+            return "verified";
+
+        } catch (HttpClientErrorException e) {
+            // 3. Failure (400 Bad Request from backend): Render error page
+            model.addAttribute("error", "The verification link is invalid or has expired.");
+            return "verification-error";
+        } catch (Exception e) {
+            model.addAttribute("error", "An unexpected error occurred during verification.");
+            return "verification-error";
         }
     }
 
