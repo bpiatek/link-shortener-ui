@@ -74,14 +74,13 @@ class AuthController {
 
     @GetMapping("/login")
     String loginPage(Model model) {
-        // Add empty object for form binding
         model.addAttribute("loginRequest", new LoginRequest("", ""));
         return "login";
     }
 
     @PostMapping("/login")
     String performLogin(
-            @ModelAttribute LoginRequest request, // Removed @Valid for simplicity, but you can add it
+            @ModelAttribute LoginRequest request,
             BindingResult bindingResult,
             HttpServletResponse response,
             Model model

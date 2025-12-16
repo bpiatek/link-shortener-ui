@@ -43,21 +43,21 @@
             method="post"
             novalidate>
 
-        <!-- Email / Username -->
+        <!-- Email -->
         <div class="mb-3">
-          <label for="username" class="form-label">
-            Email or Username
+          <label for="email" class="form-label">
+            Email
           </label>
           <input
                   type="text"
-                  id="username"
+                  id="email"
                   class="form-control"
                   th:field="*{email()}"
                   placeholder="you@example.com"
                   required/>
 
           <div class="invalid-feedback d-block"
-               th:if="${#fields.hasErrors('username')}"
+               th:if="${#fields.hasErrors('enail')}"
                th:errors="*{email()}">
           </div>
         </div>
