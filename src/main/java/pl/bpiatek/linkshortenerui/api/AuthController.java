@@ -243,6 +243,11 @@ class AuthController {
         return "redirect:/login?logout=true";
     }
 
+    @GetMapping("/inactive")
+    String linkInactivePage() {
+        return "link-inactive";
+    }
+
     private void handleBackendError(HttpClientErrorException e, BindingResult bindingResult, Model model) {
         try {
             // 1. Parse the JSON body from the exception
