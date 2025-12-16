@@ -16,4 +16,9 @@ class HomeController {
 
         return "index";
     }
+
+    @GetMapping("/404")
+    String notFound() {
+        return "404";
+    }
 }
