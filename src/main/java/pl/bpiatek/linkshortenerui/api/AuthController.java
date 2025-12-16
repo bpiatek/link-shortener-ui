@@ -18,6 +18,8 @@ import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
 import pl.bpiatek.linkshortenerui.exception.ApiError;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,16 +45,18 @@ class AuthController {
             BindingResult bindingResult,
             Model model
     ) {
+        // 1. Client-side validation checks
         if (!request.password().equals(request.confirmPassword())) {
             bindingResult.rejectValue("confirmPassword", "mismatch", "Passwords do not match");
             return "register";
         }
 
         if (bindingResult.hasErrors()) {
-            return "register"; // Client-side validation failed
+            return "register";
         }
 
         try {
+            // 2. Call Backend
             var backendRequest = new RegisterBackendRequest(request.email(), request.password());
 
             apiGatewayClient.post()
@@ -62,7 +66,10 @@ class AuthController {
                     .retrieve()
                     .toBodilessEntity();
 
-            return "redirect:/login?registered=true";
+            // 3. Success: Redirect to the "Check Email" page
+            // We encode the email to safely pass it in the URL
+            String encodedEmail = URLEncoder.encode(request.email(), StandardCharsets.UTF_8);
+            return "redirect:/registration-pending?email=" + encodedEmail;
 
         } catch (HttpClientErrorException e) {
             handleBackendError(e, bindingResult, model);
@@ -71,6 +78,13 @@ class AuthController {
             model.addAttribute("error", "An unexpected error occurred. Please try again.");
             return "register";
         }
+    }
+
+    // --- NEW ENDPOINT ---
+    @GetMapping("/registration-pending")
+    String registrationPendingPage(@RequestParam(required = false) String email, Model model) {
+        model.addAttribute("email", email);
+        return "registration-pending";
     }
 
     @GetMapping("/login")
