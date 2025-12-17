@@ -71,31 +71,35 @@
 <body>
 
 <!-- Top Navigation -->
-<nav class="navbar navbar-expand-lg navbar-light fixed-top">
-  <div class="container">
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="/">
+<nav class="navbar navbar-expand navbar-light fixed-top">
+  <div class="container-fluid px-3"> <!-- Changed container to container-fluid for more width -->
+
+    <!-- Brand: Hide text on very small screens if needed, or keep it small -->
+    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 me-auto" href="/">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-link-45deg" viewBox="0 0 16 16">
         <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
         <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
       </svg>
-      Link Shortener
+      <span class="d-none d-sm-inline">Link Shortener</span> <!-- Hide text on tiny phones -->
     </a>
 
-    <div class="ms-auto d-flex align-items-center gap-3">
+    <div class="d-flex align-items-center gap-2">
 
-      <!-- User Info -->
-      <div th:if="${userEmail}" class="d-none d-md-flex align-items-center text-secondary">
-        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border me-2" style="width: 32px; height: 32px;">
+      <!-- User Info: Visible on mobile now -->
+      <div th:if="${userEmail}" class="d-flex align-items-center text-secondary me-1">
+        <!-- Icon: Hidden on mobile to save space -->
+        <div class="d-none d-sm-flex bg-light rounded-circle align-items-center justify-content-center border me-2" style="width: 32px; height: 32px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
             <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
           </svg>
         </div>
-        <span class="fw-medium small" th:text="${userEmail}">user@example.com</span>
+        <!-- Email: Smaller font on mobile -->
+        <span class="fw-medium" style="font-size: 0.75rem;" th:text="${userEmail}">user@example.com</span>
       </div>
 
       <!-- Logout Form -->
       <form th:action="@{/sign-out}" method="post" class="m-0">
-        <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3 rounded-pill">
+        <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3 rounded-pill" style="font-size: 0.75rem;">
           Log out
         </button>
       </form>
@@ -192,35 +196,34 @@
           <thead class="table-light">
           <tr>
             <th class="ps-4 py-3 text-secondary text-uppercase small fw-bold">Short URL</th>
+            <!-- Original URL: Hidden on Mobile -->
             <th class="py-3 d-none d-md-table-cell text-secondary text-uppercase small fw-bold">Original URL</th>
             <th class="text-center py-3 text-secondary text-uppercase small fw-bold">Clicks</th>
-            <th class="text-end pe-4 py-3 text-secondary text-uppercase small fw-bold">Created</th>
+
+            <!-- Created: NOW HIDDEN ON MOBILE (d-none d-sm-table-cell) -->
+            <th class="text-end pe-4 py-3 text-secondary text-uppercase small fw-bold d-none d-sm-table-cell">Created</th>
+
             <th class="text-end pe-4 py-3 text-secondary text-uppercase small fw-bold">Actions</th>
           </tr>
           </thead>
           <tbody>
 
-          <!-- Loop through links -->
           <tr th:each="link : ${page.content}"
               th:classappend="${!link.isActive} ? 'table-light text-muted' : ''"
               class="align-middle">
 
+            <!-- Short URL Column -->
             <td class="ps-4">
               <div class="d-flex align-items-center gap-2">
-
-                <!-- Status Indicator -->
-                <div th:if="${link.isActive}" class="text-success" title="Active" data-bs-toggle="tooltip">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-circle-fill" viewBox="0 0 16 16">
-                    <circle cx="8" cy="8" r="8"/>
-                  </svg>
+                <!-- Status Dot -->
+                <div th:if="${link.isActive}" class="text-success" title="Active">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-circle-fill" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8"/></svg>
                 </div>
-                <div th:unless="${link.isActive}" class="text-secondary opacity-50" title="Inactive" data-bs-toggle="tooltip">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pause-circle-fill" viewBox="0 0 16 16">
-                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.25 5C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5zm3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5z"/>
-                  </svg>
+                <div th:unless="${link.isActive}" class="text-secondary opacity-50" title="Inactive">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pause-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.25 5C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5zm3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5z"/></svg>
                 </div>
 
-                <!-- Short Link -->
+                <!-- Link -->
                 <a th:href="@{/{code}(code=${link.shortUrl})}"
                    th:text="${link.shortUrl}"
                    class="short-url-link text-decoration-none"
@@ -232,44 +235,38 @@
                         class="btn btn-sm copy-btn rounded border-0"
                         th:classappend="${link.isActive} ? 'btn-light text-secondary' : 'btn-transparent text-muted'"
                         th:attr="data-clipboard-text=${'https://ls.bpiatek.pl/' + link.shortUrl}"
-                        onclick="copyToClipboard(this)"
-                        title="Copy to clipboard">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
-                    <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                    <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-                  </svg>
+                        onclick="copyToClipboard(this)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
                 </button>
               </div>
               <!-- Mobile view for long url -->
               <div class="small d-md-none text-truncate mt-1"
                    th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
-                   style="max-width: 150px;" th:text="${link.longUrl}"></div>
+                   style="max-width: 120px;" th:text="${link.longUrl}"></div>
             </td>
 
+            <!-- Original URL (Desktop Only) -->
             <td class="d-none d-md-table-cell">
-              <div class="text-truncate"
-                   th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
-                   style="max-width: 350px;" th:text="${link.longUrl}"></div>
-              <div th:if="${link.title}" class="small fw-bold mt-1"
-                   th:classappend="${!link.isActive} ? 'text-muted' : 'text-dark'"
-                   th:text="${link.title}"></div>
+              <div class="text-truncate" style="max-width: 350px;" th:text="${link.longUrl}"></div>
+              <div th:if="${link.title}" class="small fw-bold mt-1" th:text="${link.title}"></div>
             </td>
 
+            <!-- Clicks -->
             <td class="text-center">
-                            <span class="badge rounded-pill px-3"
-                                  th:classappend="${link.isActive} ? 'bg-light text-dark border' : 'bg-secondary text-white opacity-50'"
-                                  th:text="${link.totalClicks}">0</span>
+                        <span class="badge rounded-pill px-3"
+                              th:classappend="${link.isActive} ? 'bg-light text-dark border' : 'bg-secondary text-white opacity-50'"
+                              th:text="${link.totalClicks}">0</span>
             </td>
 
-            <td class="text-end pe-4 small"
+            <!-- Created: NOW HIDDEN ON MOBILE -->
+            <td class="text-end pe-4 small d-none d-sm-table-cell"
                 th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
-                th:text="${#temporals.format(link.createdAt, 'yyyy-MM-dd HH:mm')}">
+                th:text="${#temporals.format(link.createdAt, 'yyyy-MM-dd')}">
             </td>
 
             <!-- Actions Column -->
             <td class="text-end pe-4">
               <div class="d-flex justify-content-end gap-2">
-                <!-- Uses link.linkId for the correct ID -->
                 <a th:href="@{/dashboard/links/{id}/edit(id=${link.linkId})}"
                    class="btn btn-sm border"
                    th:classappend="${link.isActive} ? 'btn-light text-secondary' : 'btn-white text-muted'"
@@ -279,18 +276,6 @@
                   </svg>
                 </a>
               </div>
-            </td>
-          </tr>
-
-          <!-- Empty State -->
-          <tr th:if="${page.content.empty}">
-            <td colspan="5" class="text-center py-5">
-              <div class="text-muted mb-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-inbox" viewBox="0 0 16 16">
-                  <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4H4.98zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438L14.933 9zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.19 1.518a1.5 1.5 0 0 1-1.489 1.312H1.883a1.5 1.5 0 0 1-1.489-1.312l-.19-1.518a.5.5 0 0 1 .106-.374l3.7-4.625z"/>
-                </svg>
-              </div>
-              <p class="text-muted mb-0">You haven't created any links yet.</p>
             </td>
           </tr>
           </tbody>
