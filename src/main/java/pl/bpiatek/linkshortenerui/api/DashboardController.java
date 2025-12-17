@@ -1,5 +1,7 @@
 package pl.bpiatek.linkshortenerui.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -23,8 +25,11 @@ import pl.bpiatek.linkshortenerui.exception.BackendErrorMapper;
 
 import java.util.List;
 
+
 @Controller
 class DashboardController {
+
+    Logger log = LoggerFactory.getLogger(DashboardController.class);
 
     private final BackendApiService backendApi;
     private final RestClient restClient;
@@ -45,21 +50,30 @@ class DashboardController {
     ) {
         var responseType = new ParameterizedTypeReference<PageResponse<LinkDto>>() {};
 
-        PageResponse<LinkDto> linkPage = backendApi.execute(jwt ->
-                restClient.get()
-                        .uri(uriBuilder -> uriBuilder
-                                .path("/dashboard/links")
-                                .queryParam("page", page)
-                                .queryParam("size", size)
-                                .queryParam("sort", sort)
-                                .build())
-                        .header("Authorization", "Bearer " + jwt)
-                        .retrieve()
-                        .body(responseType)
-        );
+        PageResponse<LinkDto> linkPage = null;
+
+        try {
+            linkPage = backendApi.execute(jwt ->
+                    restClient.get()
+                            .uri(uriBuilder -> uriBuilder
+                                    .path("/dashboard/links")
+                                    .queryParam("page", page)
+                                    .queryParam("size", size)
+                                    .queryParam("sort", sort)
+                                    .build())
+                            .header("Authorization", "Bearer " + jwt)
+                            .retrieve()
+                            .body(responseType)
+            );
+        } catch (Exception e) {
+            log.error("Failed to fetch dashboard links", e);
+            model.addAttribute("error", "Could not load links.");
+        }
 
         if (linkPage == null) {
             linkPage = new PageResponse<>(List.of(), 0, 0, 0, 0);
+        } else if (linkPage.content() == null) {
+            linkPage = new PageResponse<>(List.of(), linkPage.page(), linkPage.size(), linkPage.totalElements(), linkPage.totalPages());
         }
 
         model.addAttribute("page", linkPage);

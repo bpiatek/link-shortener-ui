@@ -261,9 +261,9 @@
             </td>
 
             <!-- Created (Desktop Only) -->
-            <td class="text-end pe-4 small d-none d-sm-table-cell"
+            <td class="text-end pe-4 small"
                 th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
-                th:text="${#temporals.format(link.createdAt, 'yyyy-MM-dd')}">
+                th:text="${link.createdAt != null ? #temporals.format(link.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">
             </td>
 
             <!-- Actions Column (Edit + Delete) -->
