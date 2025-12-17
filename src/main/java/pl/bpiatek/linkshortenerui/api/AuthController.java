@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+
     private final RestClient apiGatewayClient;
 
     AuthController(RestClient apiGatewayClient) {

@@ -82,9 +82,20 @@
       Link Shortener
     </a>
 
-    <div class="ms-auto">
+    <div class="ms-auto d-flex align-items-center gap-3">
+
+      <!-- User Info (Only visible if logged in) -->
+      <div th:if="${userEmail}" class="d-flex align-items-center text-secondary">
+        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border me-2" style="width: 32px; height: 32px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+            <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+          </svg>
+        </div>
+        <span class="fw-medium small" th:text="${userEmail}">user@example.com</span>
+      </div>
+
       <!-- Logout Form -->
-      <form th:action="@{/sign-out}" method="post">
+      <form th:action="@{/sign-out}" method="post" class="m-0">
         <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3 rounded-pill">
           Log out
         </button>
