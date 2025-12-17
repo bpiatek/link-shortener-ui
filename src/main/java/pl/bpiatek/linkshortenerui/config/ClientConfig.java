@@ -1,9 +1,19 @@
 package pl.bpiatek.linkshortenerui.config;
 
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
+
+import java.io.IOException;
 
 @Configuration
 class ClientConfig {
@@ -16,5 +26,29 @@ class ClientConfig {
                 .baseUrl(gatewayUrl)
                 .defaultHeader("Host", hostHeader)
                 .build();
+    }
+
+    @Bean
+    public ServletWebServerFactory servletContainer() {
+        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
+        factory.addContextCustomizers(context -> {
+            context.setSessionTimeout(0); // disables session timeout
+            context.setCookies(false);    // disables JSESSIONID cookie
+        });
+        return factory;
+    }
+
+    @Bean
+    public Filter sessionDisablingFilter() {
+        return new Filter() {
+            @Override
+            public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+                    throws IOException, ServletException {
+                if (request instanceof HttpServletRequest req) {
+                    req.getSession(false); // do not create a session
+                }
+                chain.doFilter(request, response);
+            }
+        };
     }
 }
