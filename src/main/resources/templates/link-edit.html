@@ -42,7 +42,7 @@
 
         <div class="card-body p-4">
 
-            <!-- Global Error Alert -->
+            <!-- Global Error Alert (for logic errors) -->
             <div th:if="${error}" class="alert alert-danger d-flex align-items-center" role="alert">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16">
                     <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
@@ -52,7 +52,7 @@
 
             <form th:action="@{/dashboard/links/{id}/edit(id=${linkId})}"
                   th:object="${updateLinkRequest}"
-                  method="post">
+                  method="post" novalidate>
 
                 <!-- Read-Only Short URL Field -->
                 <div class="mb-3">
@@ -67,14 +67,28 @@
                 <!-- Destination URL -->
                 <div class="mb-3">
                     <label for="longUrl" class="form-label fw-bold text-secondary small">Destination URL</label>
-                    <!-- CHANGED: type="text" allows "google.com" without http:// -->
-                    <input type="text" class="form-control" id="longUrl" th:field="*{longUrl}" required>
+                    <!-- type="text" allows "google.com" without http:// -->
+                    <input type="text" class="form-control" id="longUrl"
+                           th:field="*{longUrl}"
+                           th:classappend="${#fields.hasErrors('longUrl')} ? 'is-invalid'"
+                           required>
+
+                    <!-- Field Validation Error -->
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('longUrl')}" th:errors="*{longUrl}">
+                        Invalid URL format.
+                    </div>
                 </div>
 
                 <!-- Title -->
                 <div class="mb-3">
                     <label for="title" class="form-label fw-bold text-secondary small">Title</label>
-                    <input type="text" class="form-control" id="title" th:field="*{title}">
+                    <input type="text" class="form-control" id="title"
+                           th:field="*{title}"
+                           th:classappend="${#fields.hasErrors('title')} ? 'is-invalid'">
+
+                    <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">
+                        Title error.
+                    </div>
                 </div>
 
                 <!-- Active Switch -->
