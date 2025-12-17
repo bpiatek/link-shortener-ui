@@ -8,6 +8,9 @@
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
+  <!-- HTMX (optional) -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
   <style>
     body {
       min-height: 100vh;
@@ -132,6 +135,7 @@
 
         <div class="col-md-12 d-flex align-items-center justify-content-between mt-3">
           <div class="form-check form-switch">
+            <!-- Added value="true" to ensure correct boolean binding -->
             <input class="form-check-input" type="checkbox" id="isActive" name="isActive" value="true" checked>
             <label class="form-check-label text-secondary" for="isActive">Active immediately</label>
           </div>
@@ -155,6 +159,7 @@
             <th class="py-3 d-none d-md-table-cell text-secondary text-uppercase small fw-bold">Original URL</th>
             <th class="text-center py-3 text-secondary text-uppercase small fw-bold">Clicks</th>
             <th class="text-end pe-4 py-3 text-secondary text-uppercase small fw-bold">Created</th>
+            <th class="text-end pe-4 py-3 text-secondary text-uppercase small fw-bold">Actions</th>
           </tr>
           </thead>
           <tbody>
@@ -195,11 +200,24 @@
             <td class="text-end pe-4 text-muted small"
                 th:text="${#temporals.format(link.createdAt, 'yyyy-MM-dd HH:mm')}">
             </td>
+
+            <!-- Actions Column -->
+            <td class="text-end pe-4">
+              <div class="d-flex justify-content-end gap-2">
+                <a th:href="@{/dashboard/links/{id}/edit(id=${link.id})}"
+                   class="btn btn-light btn-sm border text-secondary"
+                   title="Edit Link">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
+                    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+                  </svg>
+                </a>
+              </div>
+            </td>
           </tr>
 
           <!-- Empty State -->
           <tr th:if="${page.content.empty}">
-            <td colspan="4" class="text-center py-5">
+            <td colspan="5" class="text-center py-5">
               <div class="text-muted mb-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-inbox" viewBox="0 0 16 16">
                   <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4H4.98zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438L14.933 9zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.19 1.518a1.5 1.5 0 0 1-1.489 1.312H1.883a1.5 1.5 0 0 1-1.489-1.312l-.19-1.518a.5.5 0 0 1 .106-.374l3.7-4.625z"/>
@@ -216,13 +234,13 @@
 
   <!-- Pagination -->
   <nav th:if="${page.totalPages > 1}" class="mt-4">
-    <ul class="pagination justify-content-center">
+    <ul class="pagination justify-content-center shadow-sm">
       <li class="page-item" th:classappend="${page.first} ? 'disabled'">
         <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, size=${page.size})}">Previous</a>
       </li>
 
       <li class="page-item disabled">
-                <span class="page-link bg-transparent text-white border-0">
+                <span class="page-link bg-white text-dark border-top border-bottom">
                   Page <span th:text="${page.number + 1}"></span> of <span th:text="${page.totalPages}"></span>
                 </span>
       </li>

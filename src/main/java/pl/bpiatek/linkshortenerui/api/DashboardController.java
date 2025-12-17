@@ -1,16 +1,21 @@
 package pl.bpiatek.linkshortenerui.api;
 
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkRequest;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkResponse;
 import pl.bpiatek.linkshortenerui.dto.LinkDto;
 import pl.bpiatek.linkshortenerui.dto.PageResponse;
+import pl.bpiatek.linkshortenerui.dto.UpdateLinkRequest;
 
 @Controller
 class DashboardController {
@@ -67,6 +72,49 @@ class DashboardController {
                 .body(request)
                 .retrieve()
                 .body(CreateLinkResponse.class)
+        );
+
+        return "redirect:/dashboard";
+    }
+
+    @GetMapping("/dashboard/links/{id}/edit")
+    String editLinkPage(@PathVariable Long id, Model model) {
+        try {
+            LinkDto link = backendApi.execute(jwt -> restClient.get()
+                    .uri("/links/{id}", id)
+                    .header("Authorization", "Bearer " + jwt)
+                    .retrieve()
+                    .body(LinkDto.class)
+            );
+
+            var form = new UpdateLinkRequest(link.longUrl(), link.isActive(), link.title());
+
+            model.addAttribute("linkId", id);
+            model.addAttribute("updateLinkRequest", form);
+            model.addAttribute("shortUrl", link.shortUrl()); // For display only
+
+            return "link-edit";
+
+        } catch (HttpClientErrorException.NotFound e) {
+            return "redirect:/dashboard"; // Or show 404
+        }
+    }
+
+    @PostMapping("/dashboard/links/{id}/edit")
+    String updateLink(
+            @PathVariable Long id,
+            @ModelAttribute UpdateLinkRequest request,
+            @RequestParam(defaultValue = "false") boolean isActive
+    ) {
+        var finalRequest = new UpdateLinkRequest(request.longUrl(), isActive, request.title());
+
+        backendApi.execute(jwt -> restClient.patch()
+                .uri("/links/{id}", id)
+                .header("Authorization", "Bearer " + jwt)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(finalRequest)
+                .retrieve()
+                .toBodilessEntity()
         );
 
         return "redirect:/dashboard";
