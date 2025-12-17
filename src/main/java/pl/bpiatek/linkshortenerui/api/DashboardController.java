@@ -207,7 +207,7 @@ class DashboardController {
             );
             redirectAttributes.addFlashAttribute("success", "Link deleted successfully.");
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientResponseException e) {
             errorMapper.map(e, redirectAttributes);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to delete link.");

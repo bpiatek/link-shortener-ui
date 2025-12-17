@@ -56,13 +56,8 @@ public class GlobalExceptionHandler {
             model.addAttribute("error", "The request could not be processed.");
         }
 
+        model.addAttribute("status", ex.getStatusCode().value());
         return "error";
-    }
-
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) {
-        log.error("NoResourceFound Error: {}", ex.getMessage());
-        return ResponseEntity.notFound().build();
     }
 
     @ExceptionHandler(Exception.class)
