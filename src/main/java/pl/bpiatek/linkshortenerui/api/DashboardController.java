@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkRequest;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkResponse;
 import pl.bpiatek.linkshortenerui.dto.LinkDto;
@@ -117,6 +118,22 @@ class DashboardController {
                 .toBodilessEntity()
         );
 
+        return "redirect:/dashboard";
+    }
+
+    @PostMapping("/dashboard/links/{id}/delete")
+    String deleteLink(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            backendApi.execute(jwt -> restClient.delete()
+                    .uri("/links/{id}", id)
+                    .header("Authorization", "Bearer " + jwt)
+                    .retrieve()
+                    .toBodilessEntity()
+            );
+            redirectAttributes.addFlashAttribute("success", "Link deleted successfully.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to delete link.");
+        }
         return "redirect:/dashboard";
     }
 }
