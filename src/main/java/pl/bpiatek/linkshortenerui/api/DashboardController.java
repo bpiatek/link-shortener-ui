@@ -4,6 +4,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -121,9 +122,11 @@ class DashboardController {
     @PostMapping("/dashboard/links/{id}/edit")
     String updateLink(
             @PathVariable Long id,
-            @ModelAttribute UpdateLinkRequest request,
+            @ModelAttribute("updateLinkRequest") UpdateLinkRequest request,
             @RequestParam(defaultValue = "false") boolean isActive,
-            RedirectAttributes redirectAttributes // <--- Added
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
     ) {
         var finalRequest = new UpdateLinkRequest(request.longUrl(), isActive, request.title());
 
@@ -138,14 +141,33 @@ class DashboardController {
             );
 
             redirectAttributes.addFlashAttribute("success", "Link updated successfully!");
+            return "redirect:/dashboard";
 
-        } catch (HttpClientErrorException e) {
-            errorMapper.map(e, redirectAttributes);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Failed to update link.");
+        } catch (RestClientResponseException e) {
+            // --- ERROR HANDLING ---
+
+            // 2. Map errors to BindingResult (fields) or Model (global)
+            errorMapper.map(e, bindingResult, model);
+
+            // 3. Re-populate data required by the view (shortUrl)
+            // We need to fetch the link again because the POST request doesn't contain the shortUrl
+            try {
+                LinkDto link = backendApi.execute(jwt -> restClient.get()
+                        .uri("/links/{id}", id)
+                        .header("Authorization", "Bearer " + jwt)
+                        .retrieve()
+                        .body(LinkDto.class)
+                );
+                model.addAttribute("shortUrl", link.shortUrl());
+            } catch (Exception ex) {
+                redirectAttributes.addFlashAttribute("error", "An error occurred.");
+                return "redirect:/dashboard";
+            }
+
+            model.addAttribute("linkId", id);
+
+            return "link-edit";
         }
-
-        return "redirect:/dashboard";
     }
 
     @PostMapping("/dashboard/links/{id}/delete")
