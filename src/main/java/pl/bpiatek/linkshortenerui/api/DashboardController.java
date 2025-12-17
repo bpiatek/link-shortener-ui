@@ -21,6 +21,8 @@ import pl.bpiatek.linkshortenerui.dto.PageResponse;
 import pl.bpiatek.linkshortenerui.dto.UpdateLinkRequest;
 import pl.bpiatek.linkshortenerui.exception.BackendErrorMapper;
 
+import java.util.List;
+
 @Controller
 class DashboardController {
 
@@ -55,6 +57,10 @@ class DashboardController {
                         .retrieve()
                         .body(responseType)
         );
+
+        if (linkPage == null) {
+            linkPage = new PageResponse<>(List.of(), 0, 0, 0, 0);
+        }
 
         model.addAttribute("page", linkPage);
         return "dashboard";
