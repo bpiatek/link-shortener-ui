@@ -33,6 +33,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpClientErrorException.class)
     public String handleHttpClientError(HttpClientErrorException ex) {
 
+        log.warn("HttpClientErrorException Error: {}", ex.getMessage());
         if (ex.getStatusCode() == UNAUTHORIZED) {
             log.info("GlobalExceptionHandler caught 401 - Redirecting to login");
             return "redirect:/login";

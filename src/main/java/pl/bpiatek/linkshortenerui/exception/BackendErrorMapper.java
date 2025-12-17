@@ -1,5 +1,7 @@
 package pl.bpiatek.linkshortenerui.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -9,11 +11,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Component
 public class BackendErrorMapper {
 
+    private final static Logger log = LoggerFactory.getLogger(BackendErrorMapper.class);
+
     /**
      * Use this for standard forms (Login, Register) where you return a View name.
      * It maps validation errors to specific input fields if BindingResult is provided.
      */
     public void map(RestClientResponseException e, BindingResult bindingResult, Model model) {
+        log.info("Backend API Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+
         var apiError = parseError(e);
 
         if (apiError == null) {
@@ -48,6 +54,7 @@ public class BackendErrorMapper {
      * Overload for simple pages without form binding (e.g. Verify Email page).
      */
     public void map(RestClientResponseException e, Model model) {
+        log.info("Backend API Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
         map(e, null, model);
     }
 
@@ -56,6 +63,8 @@ public class BackendErrorMapper {
      * It puts the error into FlashAttributes so it survives the redirect.
      */
     public void map(RestClientResponseException e, RedirectAttributes redirectAttributes) {
+        log.info("Backend API Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
+
         var apiError = parseError(e);
 
         if (apiError == null) {
@@ -77,9 +86,11 @@ public class BackendErrorMapper {
     }
 
     private ApiError parseError(RestClientResponseException e) {
+        log.info("Backend API Error: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
         try {
             return e.getResponseBodyAs(ApiError.class);
         } catch (Exception ex) {
+            log.info(ex.getMessage());
             // Failed to parse JSON (maybe backend is down or returned HTML)
             return null;
         }
