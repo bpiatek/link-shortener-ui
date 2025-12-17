@@ -2,6 +2,8 @@ package pl.bpiatek.linkshortenerui.api;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -14,6 +16,8 @@ import java.util.function.Function;
 @RequestScope
 public class BackendApiService {
 
+    private static final Logger log = LoggerFactory.getLogger(BackendApiService.class);
+
     private final TokenRefresher tokenRefresher;
     private final HttpServletRequest request;
 
@@ -24,7 +28,11 @@ public class BackendApiService {
     }
 
     public <T> T execute(Function<String, T> apiCall) {
-        String accessToken = getCookie("jwt");
+        var accessToken = getCookie("jwt");
+
+        log.debug("execute(): jwt present={}, thread={}",
+                accessToken != null,
+                Thread.currentThread().getName());
 
         if (accessToken == null || accessToken.isBlank()) {
             throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
@@ -33,8 +41,10 @@ public class BackendApiService {
         try {
             return apiCall.apply(accessToken);
         } catch (HttpClientErrorException.Unauthorized ex) {
-            // Explicit refresh, then ONE clean retry
-            String refreshedToken = tokenRefresher.refreshAccessToken();
+            log.warn("execute(): received 401, attempting refresh");
+            var refreshedToken = tokenRefresher.refreshAccessToken();
+            log.debug("execute(): retrying API call with refreshed token");
+
             return apiCall.apply(refreshedToken);
         }
     }
