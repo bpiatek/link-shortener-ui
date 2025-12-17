@@ -316,17 +316,17 @@
   <nav th:if="${page.totalPages > 1}" class="mt-4">
     <ul class="pagination justify-content-center shadow-sm">
       <li class="page-item" th:classappend="${page.first} ? 'disabled'">
-        <a class="page-link" th:href="@{/dashboard(page=${page.number - 1}, size=${page.size})}">Previous</a>
+        <a class="page-link" th:href="@{/dashboard(page=${page.page - 1}, size=${page.size})}">Previous</a>
       </li>
 
       <li class="page-item disabled">
                 <span class="page-link bg-white text-dark border-top border-bottom">
-                  Page <span th:text="${page.number + 1}"></span> of <span th:text="${page.totalPages}"></span>
+                  Page <span th:text="${page.page + 1}"></span> of <span th:text="${page.totalPages}"></span>
                 </span>
       </li>
 
-      <li class="page-item" th:classappend="${page.last} ? 'disabled'">
-        <a class="page-link" th:href="@{/dashboard(page=${page.number + 1}, size=${page.size})}">Next</a>
+      <li class="page-item" th:classappend="${page.} ? 'disabled'">
+        <a class="page-link" th:href="@{/dashboard(page=${page.page + 1}, size=${page.size})}">Next</a>
       </li>
     </ul>
   </nav>
