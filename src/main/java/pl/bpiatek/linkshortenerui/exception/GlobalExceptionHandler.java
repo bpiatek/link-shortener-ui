@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.util.Base64;
 
@@ -35,6 +37,33 @@ public class GlobalExceptionHandler {
         }
 
         throw ex;
+    }
+
+    @ExceptionHandler(RestClientResponseException.class)
+    public String handleBackendError(RestClientResponseException ex, Model model) {
+        log.error("Backend API Error: {} - {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+
+        model.addAttribute("status", ex.getStatusCode().value());
+
+        if (ex.getStatusCode().value() == 405) {
+            model.addAttribute("error", "Operation not allowed (Method Not Allowed).");
+        } else if (ex.getStatusCode().is5xxServerError()) {
+            model.addAttribute("error", "Our servers are having trouble. Please try again later.");
+        } else {
+            model.addAttribute("error", "The request could not be processed.");
+        }
+
+        return "error";
+    }
+
+    @ExceptionHandler(Exception.class)
+    public String handleGeneralError(Exception ex, Model model) {
+        log.error("Unexpected UI Error", ex);
+
+        model.addAttribute("status", 500);
+        model.addAttribute("error", "An unexpected error occurred in the application.");
+
+        return "error";
     }
 
     @ModelAttribute("userEmail")
