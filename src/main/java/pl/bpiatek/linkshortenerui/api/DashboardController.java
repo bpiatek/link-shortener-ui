@@ -82,7 +82,7 @@ class DashboardController {
             log.info("Rendering dashboard with {} links. First link: {}", linkPage.content().size(),
                     linkPage.content().isEmpty() ? "None" : linkPage.content().get(0));
         }
-        
+
         return "dashboard";
     }
 
