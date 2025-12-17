@@ -1,7 +1,7 @@
 package pl.bpiatek.linkshortenerui.config;
 
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,9 +9,12 @@ import org.springframework.context.annotation.Configuration;
 class SessionConfig {
 
     @Bean
-    public ServletWebServerFactory servletContainer() {
-        var factory = new TomcatServletWebServerFactory();
-        factory.addContextCustomizers(context -> context.setSessionTimeout(0));
-        return factory;
+    public Filter sessionDisablingFilter() {
+        return (request, response, chain) -> {
+            if (request instanceof HttpServletRequest req) {
+                req.getSession(false);
+            }
+            chain.doFilter(request, response);
+        };
     }
 }
