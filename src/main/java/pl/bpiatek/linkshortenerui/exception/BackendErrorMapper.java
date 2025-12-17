@@ -3,7 +3,7 @@ package pl.bpiatek.linkshortenerui.exception;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Component
@@ -11,8 +11,9 @@ public class BackendErrorMapper {
 
     /**
      * Use this for standard forms (Login, Register) where you return a View name.
+     * It maps validation errors to specific input fields if BindingResult is provided.
      */
-    public void map(HttpClientErrorException e, BindingResult bindingResult, Model model) {
+    public void map(RestClientResponseException e, BindingResult bindingResult, Model model) {
         var apiError = parseError(e);
 
         if (apiError == null) {
@@ -34,42 +35,52 @@ public class BackendErrorMapper {
             }
         }
         // 2. Handle Logic Errors (409 Conflict, 404 Not Found, etc.)
-        else {
+        else if (apiError.detail() != null) {
             model.addAttribute("error", apiError.detail());
+        }
+        // 3. Fallback
+        else {
+            model.addAttribute("error", "An unexpected error occurred.");
         }
     }
 
-    public void map(HttpClientErrorException e, Model model) {
+    /**
+     * Overload for simple pages without form binding (e.g. Verify Email page).
+     */
+    public void map(RestClientResponseException e, Model model) {
         map(e, null, model);
     }
 
     /**
-     * Use this for actions that Redirect (Create Link, Update Link).
-     * It puts the error into FlashAttributes.
+     * Use this for actions that Redirect (Create Link, Update Link, Delete).
+     * It puts the error into FlashAttributes so it survives the redirect.
      */
-    public void map(HttpClientErrorException e, RedirectAttributes redirectAttributes) {
+    public void map(RestClientResponseException e, RedirectAttributes redirectAttributes) {
         var apiError = parseError(e);
 
         if (apiError == null) {
-            redirectAttributes.addFlashAttribute("error", "An unexpected error occurred.");
+            redirectAttributes.addFlashAttribute("error", "Request failed with status: " + e.getStatusCode());
             return;
         }
 
         // For redirects, we can't easily map to specific fields on the next page.
-        // We usually just pick the most relevant message to show in the Global Alert.
+        // We pick the most relevant message to show in the Global Alert.
         if (hasValidationErrors(apiError)) {
             // Show the message of the first validation error found
             String firstMsg = apiError.validationErrors().get(0).message();
             redirectAttributes.addFlashAttribute("error", firstMsg);
-        } else {
+        } else if (apiError.detail() != null) {
             redirectAttributes.addFlashAttribute("error", apiError.detail());
+        } else {
+            redirectAttributes.addFlashAttribute("error", "An unexpected error occurred.");
         }
     }
 
-    private ApiError parseError(HttpClientErrorException e) {
+    private ApiError parseError(RestClientResponseException e) {
         try {
             return e.getResponseBodyAs(ApiError.class);
         } catch (Exception ex) {
+            // Failed to parse JSON (maybe backend is down or returned HTML)
             return null;
         }
     }

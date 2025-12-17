@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkRequest;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkResponse;
@@ -79,7 +80,7 @@ class DashboardController {
 
             redirectAttributes.addFlashAttribute("success", "Link created successfully!");
 
-        } catch (HttpClientErrorException e) {
+        } catch (RestClientResponseException e) {
             errorMapper.map(e, redirectAttributes);
 
             redirectAttributes.addFlashAttribute("longUrl", longUrl);
