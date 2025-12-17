@@ -58,6 +58,7 @@
                 <!-- Destination URL -->
                 <div class="mb-3">
                     <label for="longUrl" class="form-label fw-bold text-secondary small">Destination URL</label>
+                    <!-- CHANGED: type="text" allows "google.com" without http:// -->
                     <input type="text" class="form-control" id="longUrl" th:field="*{longUrl}" required>
                 </div>
 

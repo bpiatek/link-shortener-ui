@@ -149,6 +149,7 @@
 
         <div class="col-md-6">
           <label for="longUrl" class="form-label fw-bold text-secondary small">Destination URL</label>
+          <!-- CHANGED: type="text" allows "google.com" without http:// -->
           <input type="text" class="form-control form-control-lg" id="longUrl" name="longUrl"
                  th:value="${longUrl}"
                  placeholder="https://example.com/very-long-url" required>

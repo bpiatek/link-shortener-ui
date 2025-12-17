@@ -23,7 +23,7 @@ import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
 import pl.bpiatek.linkshortenerui.dto.ResetPasswordBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.ResetPasswordRequest;
-import pl.bpiatek.linkshortenerui.exception.ApiError;
+import pl.bpiatek.linkshortenerui.exception.BackendErrorMapper;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -34,14 +34,15 @@ class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final RestClient apiGatewayClient;
+    private final BackendErrorMapper errorMapper;
 
-    AuthController(RestClient apiGatewayClient) {
+    AuthController(RestClient apiGatewayClient, BackendErrorMapper errorMapper) {
         this.apiGatewayClient = apiGatewayClient;
+        this.errorMapper = errorMapper;
     }
 
     @GetMapping("/register")
     String registerPage(Model model) {
-        // Add empty object for form binding
         model.addAttribute("registerRequest", new RegisterRequest("", "", ""));
         return "register";
     }
@@ -71,12 +72,12 @@ class AuthController {
                     .retrieve()
                     .toBodilessEntity();
 
-
             var encodedEmail = URLEncoder.encode(request.email(), StandardCharsets.UTF_8);
             return "redirect:/registration-pending?email=" + encodedEmail;
 
         } catch (HttpClientErrorException e) {
-            handleBackendError(e, bindingResult, model);
+            // REUSE: Maps validation errors to fields or global error
+            errorMapper.map(e, bindingResult, model);
             return "register";
         } catch (Exception e) {
             model.addAttribute("error", "An unexpected error occurred. Please try again.");
@@ -117,9 +118,9 @@ class AuthController {
             return "redirect:/dashboard";
 
         } catch (HttpClientErrorException e) {
-            // 3. Handle Errors (401, 404, 400)
-            handleBackendError(e, bindingResult, model);
-            return "login"; // Return to login page with errors
+            // REUSE: Handles 401 Bad Credentials or 400 Validation errors
+            errorMapper.map(e, bindingResult, model);
+            return "login";
         } catch (Exception e) {
             model.addAttribute("error", "Login failed. Please try again.");
             return "login";
@@ -137,7 +138,8 @@ class AuthController {
             return "verified";
 
         } catch (HttpClientErrorException e) {
-            model.addAttribute("error", "The verification link is invalid or has expired.");
+            // REUSE: Maps backend error message (e.g. "Token expired") to the model
+            errorMapper.map(e, model);
             return "verification-error";
         } catch (Exception e) {
             model.addAttribute("error", "An unexpected error occurred during verification.");
@@ -157,7 +159,6 @@ class AuthController {
             Model model
     ) {
         try {
-
             apiGatewayClient.post()
                     .uri("/users/auth/forgot-password")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -168,6 +169,10 @@ class AuthController {
             String encodedEmail = URLEncoder.encode(request.email(), StandardCharsets.UTF_8);
             return "redirect:/forgot-password-pending?email=" + encodedEmail;
 
+        } catch (HttpClientErrorException e) {
+            // REUSE: Handle 400/404 from backend if configured to return errors
+            errorMapper.map(e, model);
+            return "forgot-password";
         } catch (Exception e) {
             model.addAttribute("error", "An unexpected error occurred. Please try again later.");
             return "forgot-password";
@@ -182,7 +187,6 @@ class AuthController {
 
     @GetMapping("/reset-password")
     String resetPasswordPage(@RequestParam("token") String token, Model model) {
-        // Pre-fill the token in the form object so it can be put into a hidden input
         model.addAttribute("resetPasswordForm", new ResetPasswordRequest(token, "", ""));
         return "reset-password";
     }
@@ -211,7 +215,7 @@ class AuthController {
             return "redirect:/login?reset=true";
 
         } catch (HttpClientErrorException e) {
-            model.addAttribute("error", "Failed to reset password. The link may be invalid or expired.");
+            errorMapper.map(e, bindingResult, model);
             return "reset-password";
         } catch (Exception e) {
             model.addAttribute("error", "An unexpected error occurred.");
@@ -247,34 +251,6 @@ class AuthController {
     @GetMapping("/inactive")
     String linkInactivePage() {
         return "link-inactive";
-    }
-
-    private void handleBackendError(HttpClientErrorException e, BindingResult bindingResult, Model model) {
-        try {
-            // 1. Parse the JSON body from the exception
-            var apiError = e.getResponseBodyAs(ApiError.class);
-
-            if (apiError != null) {
-                // Case A: Validation Errors (400)
-                if (apiError.validationErrors() != null && !apiError.validationErrors().isEmpty()) {
-                    for (var error : apiError.validationErrors()) {
-                        // Map backend field error to UI BindingResult
-                        // This makes th:errors="*{field}" work in Thymeleaf!
-                        bindingResult.rejectValue(error.field(), "backend", error.message());
-                    }
-                }
-                // Case B: Logic Errors (e.g., 409 User Already Exists)
-                else {
-                    // Show the 'detail' message from the backend in the global alert
-                    model.addAttribute("error", apiError.detail());
-                }
-            } else {
-                // Fallback if JSON parsing failed
-                model.addAttribute("error", "Server returned error: " + e.getStatusCode());
-            }
-        } catch (Exception parseEx) {
-            model.addAttribute("error", "Could not parse error response from server.");
-        }
     }
 
     private void setJwtCookie(HttpServletResponse response, String name, String value, int maxAge) {

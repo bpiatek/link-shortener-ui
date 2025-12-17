@@ -17,16 +17,19 @@ import pl.bpiatek.linkshortenerui.dto.CreateLinkResponse;
 import pl.bpiatek.linkshortenerui.dto.LinkDto;
 import pl.bpiatek.linkshortenerui.dto.PageResponse;
 import pl.bpiatek.linkshortenerui.dto.UpdateLinkRequest;
+import pl.bpiatek.linkshortenerui.exception.BackendErrorMapper;
 
 @Controller
 class DashboardController {
 
     private final BackendApiService backendApi;
     private final RestClient restClient;
+    private final BackendErrorMapper errorMapper;
 
-    DashboardController(BackendApiService backendApi, RestClient restClient) {
+    DashboardController(BackendApiService backendApi, RestClient restClient, BackendErrorMapper errorMapper) {
         this.backendApi = backendApi;
         this.restClient = restClient;
+        this.errorMapper = errorMapper;
     }
 
     @GetMapping("/dashboard")
@@ -34,14 +37,12 @@ class DashboardController {
             Model model,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "created_at,desc") String sort // Default sort
+            @RequestParam(defaultValue = "created_at,desc") String sort
     ) {
-        // We use a ParameterizedTypeReference to tell Jackson how to unmarshal PageResponse<LinkDto>
         var responseType = new ParameterizedTypeReference<PageResponse<LinkDto>>() {};
 
         PageResponse<LinkDto> linkPage = backendApi.execute(jwt ->
                 restClient.get()
-                        // Pass query params to the Gateway
                         .uri(uriBuilder -> uriBuilder
                                 .path("/dashboard/links")
                                 .queryParam("page", page)
@@ -63,23 +64,37 @@ class DashboardController {
             @RequestParam(required = false) String shortUrl,
             @RequestParam(defaultValue = "false") boolean isActive,
             @RequestParam(required = false) String title,
-            Model model
+            RedirectAttributes redirectAttributes // <--- Added for Flash Attributes
     ) {
         var request = new CreateLinkRequest(longUrl, shortUrl, isActive, title);
 
-        backendApi.execute(userJwt -> restClient.post()
-                .uri("/links")
-                .header("Authorization", "Bearer " + userJwt)
-                .body(request)
-                .retrieve()
-                .body(CreateLinkResponse.class)
-        );
+        try {
+            backendApi.execute(userJwt -> restClient.post()
+                    .uri("/links")
+                    .header("Authorization", "Bearer " + userJwt)
+                    .body(request)
+                    .retrieve()
+                    .body(CreateLinkResponse.class)
+            );
+
+            redirectAttributes.addFlashAttribute("success", "Link created successfully!");
+
+        } catch (HttpClientErrorException e) {
+            errorMapper.map(e, redirectAttributes);
+
+            redirectAttributes.addFlashAttribute("longUrl", longUrl);
+            redirectAttributes.addFlashAttribute("shortUrl", shortUrl);
+            redirectAttributes.addFlashAttribute("title", title);
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "An unexpected error occurred.");
+        }
 
         return "redirect:/dashboard";
     }
 
     @GetMapping("/dashboard/links/{id}/edit")
-    String editLinkPage(@PathVariable Long id, Model model) {
+    String editLinkPage(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
             LinkDto link = backendApi.execute(jwt -> restClient.get()
                     .uri("/links/{id}", id)
@@ -92,12 +107,13 @@ class DashboardController {
 
             model.addAttribute("linkId", id);
             model.addAttribute("updateLinkRequest", form);
-            model.addAttribute("shortUrl", link.shortUrl()); // For display only
+            model.addAttribute("shortUrl", link.shortUrl());
 
             return "link-edit";
 
         } catch (HttpClientErrorException.NotFound e) {
-            return "redirect:/dashboard"; // Or show 404
+            redirectAttributes.addFlashAttribute("error", "Link not found.");
+            return "redirect:/dashboard";
         }
     }
 
@@ -105,18 +121,28 @@ class DashboardController {
     String updateLink(
             @PathVariable Long id,
             @ModelAttribute UpdateLinkRequest request,
-            @RequestParam(defaultValue = "false") boolean isActive
+            @RequestParam(defaultValue = "false") boolean isActive,
+            RedirectAttributes redirectAttributes // <--- Added
     ) {
         var finalRequest = new UpdateLinkRequest(request.longUrl(), isActive, request.title());
 
-        backendApi.execute(jwt -> restClient.patch()
-                .uri("/links/{id}", id)
-                .header("Authorization", "Bearer " + jwt)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(finalRequest)
-                .retrieve()
-                .toBodilessEntity()
-        );
+        try {
+            backendApi.execute(jwt -> restClient.patch()
+                    .uri("/links/{id}", id)
+                    .header("Authorization", "Bearer " + jwt)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(finalRequest)
+                    .retrieve()
+                    .toBodilessEntity()
+            );
+
+            redirectAttributes.addFlashAttribute("success", "Link updated successfully!");
+
+        } catch (HttpClientErrorException e) {
+            errorMapper.map(e, redirectAttributes);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Failed to update link.");
+        }
 
         return "redirect:/dashboard";
     }
@@ -131,6 +157,9 @@ class DashboardController {
                     .toBodilessEntity()
             );
             redirectAttributes.addFlashAttribute("success", "Link deleted successfully.");
+
+        } catch (HttpClientErrorException e) {
+            errorMapper.map(e, redirectAttributes);
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Failed to delete link.");
         }
