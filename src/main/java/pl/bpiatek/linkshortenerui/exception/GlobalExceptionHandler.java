@@ -60,6 +60,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) {
+        log.error("NoResourceFound Error: {}", ex.getMessage());
         return ResponseEntity.notFound().build();
     }
 

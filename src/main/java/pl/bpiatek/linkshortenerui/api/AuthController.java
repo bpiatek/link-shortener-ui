@@ -228,7 +228,6 @@ class AuthController {
             @CookieValue(value = "refresh_jwt", required = false) String refreshToken,
             HttpServletResponse response
     ) {
-        log.info("refreshToken on logout {}", refreshToken);
         if (refreshToken != null) {
             try {
                 apiGatewayClient.post()
