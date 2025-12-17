@@ -137,7 +137,7 @@
 
         <div class="col-md-6">
           <label for="longUrl" class="form-label fw-bold text-secondary small">Destination URL</label>
-          <input type="url" class="form-control form-control-lg" id="longUrl" name="longUrl"
+          <input type="text" class="form-control form-control-lg" id="longUrl" name="longUrl"
                  th:value="${longUrl}"
                  placeholder="https://example.com/very-long-url" required>
         </div>
@@ -230,7 +230,7 @@
             <!-- Actions Column -->
             <td class="text-end pe-4">
               <div class="d-flex justify-content-end gap-2">
-                <a th:href="@{/dashboard/links/{id}/edit(id=${link.id})}"
+                <a th:href="@{/dashboard/links/{id}/edit(id=${link.linkId})}"
                    class="btn btn-light btn-sm border text-secondary"
                    title="Edit Link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
