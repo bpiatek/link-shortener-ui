@@ -2,35 +2,29 @@ package pl.bpiatek.linkshortenerui.api;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestClient;
-import pl.bpiatek.linkshortenerui.dto.RefreshRequest;
-import pl.bpiatek.linkshortenerui.dto.TokenResponse;
+import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Arrays;
 import java.util.function.Function;
 
 @Service
+@RequestScope
 public class BackendApiService {
 
-    private final RestClient restClient;
-    private final HttpServletRequest httpRequest;
-    private final HttpServletResponse httpResponse;
+    private final TokenRefresher tokenRefresher;
+    private final HttpServletRequest request;
 
-    public BackendApiService(RestClient restClient,
-                             HttpServletRequest httpRequest,
-                             HttpServletResponse httpResponse) {
-        this.restClient = restClient;
-        this.httpRequest = httpRequest;
-        this.httpResponse = httpResponse;
+    public BackendApiService(TokenRefresher tokenRefresher,
+                             HttpServletRequest request) {
+        this.tokenRefresher = tokenRefresher;
+        this.request = request;
     }
 
     public <T> T execute(Function<String, T> apiCall) {
-        String accessToken = getCookieValue("jwt");
+        String accessToken = getCookie("jwt");
 
         if (accessToken == null || accessToken.isBlank()) {
             throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
@@ -39,56 +33,19 @@ public class BackendApiService {
         try {
             return apiCall.apply(accessToken);
         } catch (HttpClientErrorException.Unauthorized ex) {
-            performRefresh();
-            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
+            // Explicit refresh, then ONE clean retry
+            String refreshedToken = tokenRefresher.refreshAccessToken();
+            return apiCall.apply(refreshedToken);
         }
     }
 
-    private void performRefresh() {
-        String refreshToken = getCookieValue("refresh_jwt");
+    private String getCookie(String name) {
+        if (request.getCookies() == null) return null;
 
-        if (refreshToken == null || refreshToken.isBlank()) {
-            clearCookies();
-            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
-        }
-
-        try {
-            TokenResponse tokens = restClient.post()
-                    .uri("/users/auth/refresh")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(new RefreshRequest(refreshToken))
-                    .retrieve()
-                    .body(TokenResponse.class);
-
-            updateCookie("jwt", tokens.accessToken(), 900);
-            updateCookie("refresh_jwt", tokens.refreshToken(), 604800);
-
-        } catch (Exception e) {
-            clearCookies();
-            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
-        }
-    }
-
-    private String getCookieValue(String name) {
-        if (httpRequest.getCookies() == null) return null;
-        return Arrays.stream(httpRequest.getCookies())
+        return Arrays.stream(request.getCookies())
                 .filter(c -> name.equals(c.getName()))
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElse(null);
-    }
-
-    private void updateCookie(String name, String value, int age) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(age);
-        httpResponse.addCookie(cookie);
-    }
-
-    private void clearCookies() {
-        updateCookie("jwt", "", 0);
-        updateCookie("refresh_jwt", "", 0);
     }
 }
