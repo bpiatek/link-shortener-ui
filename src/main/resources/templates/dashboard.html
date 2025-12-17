@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-
   <title>Dashboard · Link Shortener</title>
 
   <!-- Bootstrap 5 -->
@@ -151,7 +150,7 @@
 
         <div class="col-md-6">
           <label for="longUrl" class="form-label fw-bold text-secondary small">Destination URL</label>
-          <!-- CHANGED: type="text" allows "google.com" without http:// -->
+          <!-- type="text" allows "google.com" without http:// -->
           <input type="text" class="form-control form-control-lg" id="longUrl" name="longUrl"
                  th:value="${longUrl}"
                  placeholder="https://example.com/very-long-url" required>
@@ -205,18 +204,19 @@
           <tbody>
 
           <!-- Loop through links -->
+          <!-- Added defensive check for isActive nullability -->
           <tr th:each="link : ${page.content}"
-              th:classappend="${!link.isActive} ? 'table-light text-muted' : ''"
+              th:classappend="${link.isActive != null && !link.isActive} ? 'table-light text-muted' : ''"
               class="align-middle">
 
             <!-- Short URL Column -->
             <td class="ps-4">
               <div class="d-flex align-items-center gap-2">
-                <!-- Status Indicator -->
-                <div th:if="${link.isActive}" class="text-success" title="Active" data-bs-toggle="tooltip">
+                <!-- Status Indicator (Safe Check) -->
+                <div th:if="${link.isActive == true}" class="text-success" title="Active" data-bs-toggle="tooltip">
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-circle-fill" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8"/></svg>
                 </div>
-                <div th:unless="${link.isActive}" class="text-secondary opacity-50" title="Inactive" data-bs-toggle="tooltip">
+                <div th:unless="${link.isActive == true}" class="text-secondary opacity-50" title="Inactive" data-bs-toggle="tooltip">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pause-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM6.25 5C5.56 5 5 5.56 5 6.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C7.5 5.56 6.94 5 6.25 5zm3.5 0c-.69 0-1.25.56-1.25 1.25v3.5a1.25 1.25 0 1 0 2.5 0v-3.5C11 5.56 10.44 5 9.75 5z"/></svg>
                 </div>
 
@@ -224,14 +224,14 @@
                 <a th:href="@{/{code}(code=${link.shortUrl})}"
                    th:text="${link.shortUrl}"
                    class="short-url-link text-decoration-none"
-                   th:classappend="${link.isActive} ? 'text-primary fw-bold' : 'text-muted text-decoration-line-through'"
+                   th:classappend="${link.isActive == true} ? 'text-primary fw-bold' : 'text-muted text-decoration-line-through'"
                    target="_blank"></a>
 
                 <!-- Copy Button -->
                 <button type="button"
                         class="btn btn-sm copy-btn rounded border-0"
-                        th:classappend="${link.isActive} ? 'btn-light text-secondary' : 'btn-transparent text-muted'"
-                        th:attr="data-clipboard-text=${'https://ls.bpiatek.pl/' + link.shortUrl}"
+                        th:classappend="${link.isActive == true} ? 'btn-light text-secondary' : 'btn-transparent text-muted'"
+                        th:attr="data-clipboard-text=${'https://ls.bpiatek.pl/' + (link.shortUrl ?: '')}"
                         onclick="copyToClipboard(this)"
                         title="Copy to clipboard">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
@@ -239,52 +239,55 @@
               </div>
               <!-- Mobile view for long url -->
               <div class="small d-md-none text-truncate mt-1"
-                   th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
+                   th:classappend="${link.isActive != null && !link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
                    style="max-width: 120px;" th:text="${link.longUrl}"></div>
             </td>
 
             <!-- Original URL (Desktop Only) -->
             <td class="d-none d-md-table-cell">
               <div class="text-truncate"
-                   th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
+                   th:classappend="${link.isActive != null && !link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
                    style="max-width: 350px;" th:text="${link.longUrl}"></div>
               <div th:if="${link.title}" class="small fw-bold mt-1"
-                   th:classappend="${!link.isActive} ? 'text-muted' : 'text-dark'"
+                   th:classappend="${link.isActive != null && !link.isActive} ? 'text-muted' : 'text-dark'"
                    th:text="${link.title}"></div>
             </td>
 
             <!-- Clicks -->
             <td class="text-center">
                             <span class="badge rounded-pill px-3"
-                                  th:classappend="${link.isActive} ? 'bg-light text-dark border' : 'bg-secondary text-white opacity-50'"
+                                  th:classappend="${link.isActive == true} ? 'bg-light text-dark border' : 'bg-secondary text-white opacity-50'"
                                   th:text="${link.totalClicks}">0</span>
             </td>
 
             <!-- Created (Desktop Only) -->
-            <td class="text-end pe-4 small"
-                th:classappend="${!link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
-                th:text="${link.createdAt != null ? #temporals.format(link.createdAt, 'yyyy-MM-dd HH:mm') : '-'}">
+            <!-- CRITICAL FIX: Added null check for createdAt -->
+            <td class="text-end pe-4 small d-none d-sm-table-cell"
+                th:classappend="${link.isActive != null && !link.isActive} ? 'text-muted opacity-50' : 'text-muted'"
+                th:text="${link.createdAt != null ? #temporals.format(link.createdAt, 'yyyy-MM-dd') : '-'}">
             </td>
 
             <!-- Actions Column (Edit + Delete) -->
             <td class="text-end pe-4">
               <div class="d-flex justify-content-end gap-2">
-                <!-- Edit Button -->
-                <a th:href="@{/dashboard/links/{id}/edit(id=${link.linkId})}"
+                <!-- Edit Button (Safe ID check) -->
+                <a th:if="${link.linkId != null}"
+                   th:href="@{/dashboard/links/{id}/edit(id=${link.linkId})}"
                    class="btn btn-sm border"
-                   th:classappend="${link.isActive} ? 'btn-light text-secondary' : 'btn-white text-muted'"
+                   th:classappend="${link.isActive == true} ? 'btn-light text-secondary' : 'btn-white text-muted'"
                    title="Edit Link">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
                     <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
                   </svg>
                 </a>
 
-                <!-- Delete Button -->
-                <form th:action="@{/dashboard/links/{id}/delete(id=${link.linkId})}" method="post"
+                <!-- Delete Button (Safe ID check) -->
+                <form th:if="${link.linkId != null}"
+                      th:action="@{/dashboard/links/{id}/delete(id=${link.linkId})}" method="post"
                       onsubmit="return confirm('Are you sure you want to delete this link? This action cannot be undone.');">
                   <button type="submit"
                           class="btn btn-sm border"
-                          th:classappend="${link.isActive} ? 'btn-white text-danger' : 'btn-white text-muted'"
+                          th:classappend="${link.isActive == true} ? 'btn-white text-danger' : 'btn-white text-muted'"
                           title="Delete Link">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
                       <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/>
@@ -315,20 +318,16 @@
   <!-- Pagination -->
   <nav th:if="${page.totalPages > 1}" class="mt-4">
     <ul class="pagination justify-content-center shadow-sm">
-
-
       <li class="page-item" th:classappend="${page.first} ? 'disabled'">
         <a class="page-link" th:href="@{/dashboard(page=${page.page - 1}, size=${page.size})}">Previous</a>
       </li>
 
-      <!-- Current Page Info -->
       <li class="page-item disabled">
                 <span class="page-link bg-white text-dark border-top border-bottom">
                   Page <span th:text="${page.page + 1}"></span> of <span th:text="${page.totalPages}"></span>
                 </span>
       </li>
 
-      <!-- Next -->
       <li class="page-item" th:classappend="${page.last} ? 'disabled'">
         <a class="page-link" th:href="@{/dashboard(page=${page.page + 1}, size=${page.size})}">Next</a>
       </li>

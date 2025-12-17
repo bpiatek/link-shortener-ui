@@ -77,6 +77,12 @@ class DashboardController {
         }
 
         model.addAttribute("page", linkPage);
+
+        if (linkPage != null && linkPage.content() != null) {
+            log.info("Rendering dashboard with {} links. First link: {}", linkPage.content().size(),
+                    linkPage.content().isEmpty() ? "None" : linkPage.content().get(0));
+        }
+        
         return "dashboard";
     }
 
