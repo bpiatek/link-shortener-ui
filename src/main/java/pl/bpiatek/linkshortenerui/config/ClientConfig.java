@@ -29,23 +29,13 @@ class ClientConfig {
     }
 
     @Bean
-    public ServletWebServerFactory servletContainer() {
-        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory();
-        factory.addContextCustomizers(context -> {
-            context.setSessionTimeout(0); // disables session timeout
-            context.setCookies(false);    // disables JSESSIONID cookie
-        });
-        return factory;
-    }
-
-    @Bean
     public Filter sessionDisablingFilter() {
         return new Filter() {
             @Override
             public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
                     throws IOException, ServletException {
                 if (request instanceof HttpServletRequest req) {
-                    req.getSession(false); // do not create a session
+                    req.getSession(false);
                 }
                 chain.doFilter(request, response);
             }
