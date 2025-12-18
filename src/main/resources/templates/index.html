@@ -18,6 +18,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative; /* Needed for absolute positioning context if used */
         }
         .hero-card {
             max-width: 650px;
@@ -26,7 +27,7 @@
         .icon-circle {
             width: 80px;
             height: 80px;
-            background-color: #e7f1ff; /* Light blue to match theme */
+            background-color: #e7f1ff;
             color: #0d6efd;
             border-radius: 50%;
             display: flex;
@@ -34,10 +35,40 @@
             justify-content: center;
             margin: 0 auto 1.5rem;
         }
+        /* Custom style for the top nav on the landing page to make it blend in */
+        .landing-nav {
+            padding-top: 1rem;
+            padding-right: 1rem;
+        }
     </style>
 </head>
 
 <body>
+
+<!-- Top Right User Info (Only visible if logged in) -->
+<nav th:if="${userEmail}" class="navbar fixed-top landing-nav">
+    <div class="container-fluid justify-content-end">
+        <div class="d-flex align-items-center gap-3">
+
+            <!-- User Email -->
+            <div class="d-flex align-items-center text-white">
+                <div class="d-flex bg-white bg-opacity-25 rounded-circle align-items-center justify-content-center border border-white border-opacity-50 me-2" style="width: 32px; height: 32px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+                        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
+                    </svg>
+                </div>
+                <span class="fw-medium" style="font-size: 0.9rem;" th:text="${userEmail}">user@example.com</span>
+            </div>
+
+            <!-- Logout Button -->
+            <form th:action="@{/sign-out}" method="post" class="m-0">
+                <button type="submit" class="btn btn-outline-light btn-sm fw-bold px-3 rounded-pill">
+                    Log out
+                </button>
+            </form>
+        </div>
+    </div>
+</nav>
 
 <div class="container px-3">
     <div class="card hero-card shadow-lg border-0 mx-auto">
@@ -61,15 +92,29 @@
                 across any platform.
             </p>
 
-            <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+            <!-- Buttons Section -->
+
+            <!-- SCENARIO 1: User is NOT logged in -->
+            <div th:unless="${userEmail}" class="d-grid gap-3 d-sm-flex justify-content-sm-center">
                 <a href="/login" class="btn btn-primary btn-lg px-4 fw-bold">
                     Log in
                 </a>
-
                 <a href="/register" class="btn btn-outline-primary btn-lg px-4 fw-bold">
                     Sign up
                 </a>
             </div>
+
+            <!-- SCENARIO 2: User IS logged in -->
+            <div th:if="${userEmail}" class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                <a href="/dashboard" class="btn btn-primary btn-lg px-5 fw-bold d-flex align-items-center justify-content-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-speedometer2" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5V6a.5.5 0 0 1-1 0V4.5A.5.5 0 0 1 8 4zM3.732 5.732a.5.5 0 0 1 .707 0l.915.914a.5.5 0 1 1-.708.708l-.914-.915a.5.5 0 0 1 0-.707zM2 10a.5.5 0 0 1 .5-.5h1.586a.5.5 0 0 1 0 1H2.5A.5.5 0 0 1 2 10zm9.5 0a.5.5 0 0 1 .5-.5h1.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm.754-4.246a.389.389 0 0 0-.527-.02L9.687 7.38a2.5 2.5 0 1 1-.704.064L11.29 5.65a.39.39 0 0 0 .964.104z"/>
+                        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z"/>
+                    </svg>
+                    Go to Dashboard
+                </a>
+            </div>
+
         </div>
     </div>
 

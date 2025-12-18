@@ -83,14 +83,16 @@
         <path d="M4.715 6.542 3.343 7.914a3 3 0 1 0 4.243 4.243l1.828-1.829A3 3 0 0 0 8.586 5.5L8 6.086a1.002 1.002 0 0 0-.154.199 2 2 0 0 1 .861 3.337L6.88 11.45a2 2 0 1 1-2.83-2.83l.793-.792a4.018 4.018 0 0 1-.128-1.287z"/>
         <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
       </svg>
+      <!-- Brand text: Hidden on XS, Visible on SM+ -->
       <span class="d-none d-sm-inline">Link Shortener</span>
     </a>
 
     <div class="d-flex align-items-center gap-2">
 
-      <!-- User Info (Visible on Mobile) -->
+      <!-- User Info -->
+      <!-- FIXED: Removed 'd-none d-sm-flex' from the icon div to ensure visibility on all screens -->
       <div th:if="${userEmail}" class="d-flex align-items-center text-secondary me-1">
-        <div class="d-none d-sm-flex bg-light rounded-circle align-items-center justify-content-center border me-2" style="width: 32px; height: 32px;">
+        <div class="d-flex bg-light rounded-circle align-items-center justify-content-center border me-2" style="width: 32px; height: 32px;">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
             <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/>
           </svg>
@@ -107,8 +109,6 @@
     </div>
   </div>
 </nav>
-
-<div class="container">
 
   <!-- Page Title -->
   <div class="mb-4 text-white">
