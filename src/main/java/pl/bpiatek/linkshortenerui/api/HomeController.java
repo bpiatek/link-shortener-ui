@@ -22,7 +22,7 @@ class HomeController {
 
         if (jwt == null || jwt.isBlank()) {
             tokenRefresher.refreshAccessToken();
-            return "index";
+            return "redirect:/index";
         }
 
         return "index";
