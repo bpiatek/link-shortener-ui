@@ -35,7 +35,13 @@ public class BackendApiService {
                 Thread.currentThread().getName());
 
         if (accessToken == null || accessToken.isBlank()) {
-            throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
+            log.info("execute(): Access token cookie missing. Attempting refresh...");
+            try {
+                accessToken = tokenRefresher.refreshAccessToken();
+            } catch (Exception e) {
+                log.warn("execute(): Refresh failed. User must login.");
+                throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
+            }
         }
 
         try {
