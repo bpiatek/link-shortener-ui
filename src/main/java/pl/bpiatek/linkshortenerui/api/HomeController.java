@@ -9,11 +9,6 @@ class HomeController {
 
     @GetMapping("/")
     String home(@CookieValue(value = "jwt", required = false) String jwt) {
-        if (jwt != null) {
-
-            return "redirect:/dashboard";
-        }
-
         return "index";
     }
 
