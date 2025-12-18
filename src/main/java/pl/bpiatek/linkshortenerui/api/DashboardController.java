@@ -18,6 +18,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkRequest;
 import pl.bpiatek.linkshortenerui.dto.CreateLinkResponse;
+import pl.bpiatek.linkshortenerui.dto.DashboardLinkResponse;
 import pl.bpiatek.linkshortenerui.dto.LinkDto;
 import pl.bpiatek.linkshortenerui.dto.PageResponse;
 import pl.bpiatek.linkshortenerui.dto.UpdateLinkRequest;
@@ -213,5 +214,30 @@ class DashboardController {
             redirectAttributes.addFlashAttribute("error", "Failed to delete link.");
         }
         return "redirect:/dashboard";
+    }
+
+    @GetMapping("/dashboard/links/{linkId}")
+    public String linkDetails(
+            @PathVariable String linkId,
+            Model model
+    ) {
+        DashboardLinkResponse link;
+
+        try {
+            link = backendApi.execute(jwt ->
+                    restClient.get()
+                            .uri("/dashboard/links/{id}", linkId)
+                            .header("Authorization", "Bearer " + jwt)
+                            .retrieve()
+                            .body(DashboardLinkResponse.class)
+            );
+        } catch (Exception ex) {
+            log.error("Failed to fetch link details for {}", linkId, ex);
+            model.addAttribute("error", "Could not load link details.");
+            return "redirect:/dashboard";
+        }
+
+        model.addAttribute("link", link);
+        return "link-details";
     }
 }

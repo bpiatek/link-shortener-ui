@@ -138,7 +138,6 @@ class AuthController {
             return "verified";
 
         } catch (HttpClientErrorException e) {
-            // REUSE: Maps backend error message (e.g. "Token expired") to the model
             errorMapper.map(e, model);
             return "verification-error";
         } catch (Exception e) {
@@ -156,8 +155,7 @@ class AuthController {
     @PostMapping("/forgot-password")
     String performForgotPassword(
             @ModelAttribute ForgotPasswordRequest request,
-            Model model
-    ) {
+            Model model) {
         try {
             apiGatewayClient.post()
                     .uri("/users/auth/forgot-password")
@@ -170,7 +168,6 @@ class AuthController {
             return "redirect:/forgot-password-pending?email=" + encodedEmail;
 
         } catch (HttpClientErrorException e) {
-            // REUSE: Handle 400/404 from backend if configured to return errors
             errorMapper.map(e, model);
             return "forgot-password";
         } catch (Exception e) {
@@ -195,8 +192,7 @@ class AuthController {
     String performResetPassword(
             @ModelAttribute ResetPasswordRequest form,
             BindingResult bindingResult,
-            Model model
-    ) {
+            Model model) {
         if (!form.password().equals(form.confirmPassword())) {
             bindingResult.rejectValue("confirmPassword", "mismatch", "Passwords do not match");
             return "reset-password";

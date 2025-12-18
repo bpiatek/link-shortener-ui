@@ -37,13 +37,13 @@ public class TokenRefresher {
     public String refreshAccessToken() {
         var refreshToken = getCookie("refresh_jwt");
 
-        log.debug("performRefresh(): refresh token present={}", refreshToken != null);
+        log.info("performRefresh(): refresh token present={}", refreshToken != null);
 
         try {
 
 
             if (refreshToken == null || refreshToken.isBlank()) {
-                log.warn("performRefresh(): no refresh token");
+                log.info("performRefresh(): no refresh token");
                 throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
             }
 
@@ -54,14 +54,14 @@ public class TokenRefresher {
                     .retrieve()
                     .body(TokenResponse.class);
 
-            log.debug("performRefresh(): refresh successful");
+            log.info("performRefresh(): refresh successful");
 
             setCookie("jwt", tokens.accessToken(), 900);
             setCookie("refresh_jwt", tokens.refreshToken(), 604800);
 
             return tokens.accessToken();
         } catch (Exception e) {
-            log.warn("performRefresh(): refresh failed", e);
+            log.info("performRefresh(): refresh failed", e);
             clearCookies();
             throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Refresh failed");
         }
@@ -74,18 +74,18 @@ public class TokenRefresher {
 
     private String getCookie(String name) {
         if (request.getCookies() == null) {
-            log.debug("getCookieValue({}): no cookies present", name);
+            log.info("getCookieValue({}): no cookies present", name);
             return null;
         }
 
         return Arrays.stream(request.getCookies())
                 .filter(c -> name.equals(c.getName()))
                 .map(c -> {
-                    log.debug("getCookieValue({}): found", name);
+                    log.info("getCookieValue({}): found", name);
                     return  c.getValue();
                 })
                 .findAny().orElseGet(() -> {
-                    log.debug("getCookieValue({}): not found", name);
+                    log.info("getCookieValue({}): not found", name);
                     return null;
                 });
     }

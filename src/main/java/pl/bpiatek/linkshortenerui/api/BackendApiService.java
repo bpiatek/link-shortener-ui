@@ -30,7 +30,7 @@ public class BackendApiService {
     public <T> T execute(Function<String, T> apiCall) {
         var accessToken = getCookie("jwt");
 
-        log.debug("execute(): jwt present={}, thread={}",
+        log.info("execute(): jwt present={}, thread={}",
                 accessToken != null,
                 Thread.currentThread().getName());
 
@@ -43,7 +43,7 @@ public class BackendApiService {
         } catch (HttpClientErrorException.Unauthorized ex) {
             log.warn("execute(): received 401, attempting refresh");
             var refreshedToken = tokenRefresher.refreshAccessToken();
-            log.debug("execute(): retrying API call with refreshed token");
+            log.info("execute(): retrying API call with refreshed token");
 
             return apiCall.apply(refreshedToken);
         }
