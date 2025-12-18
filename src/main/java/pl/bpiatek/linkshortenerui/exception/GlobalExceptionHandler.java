@@ -1,5 +1,6 @@
 package pl.bpiatek.linkshortenerui.exception;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ui.Model;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
 
+import java.util.Base64;
+
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @ControllerAdvice
@@ -17,12 +20,11 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    private final TokenChecker tokenChecker;
+    private final ObjectMapper objectMapper;
 
-    public GlobalExceptionHandler(TokenChecker tokenChecker) {
-        this.tokenChecker = tokenChecker;
+    public GlobalExceptionHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
-
 
     @ExceptionHandler(HttpClientErrorException.class)
     public String handleHttpClientError(HttpClientErrorException ex) {
@@ -66,6 +68,21 @@ public class GlobalExceptionHandler {
 
     @ModelAttribute("userEmail")
     public String populateUserEmail(@CookieValue(value = "jwt", required = false) String jwt) {
-        return tokenChecker.extractEmail(jwt);
+        if (jwt == null || jwt.isBlank()) {
+            return null;
+        }
+        try {
+            var parts = jwt.split("\\.");
+            if (parts.length < 2) {
+                return null;
+            }
+
+            var payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+            var claims = objectMapper.readTree(payloadJson);
+
+            return claims.has("email") ? claims.get("email").asText() : null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

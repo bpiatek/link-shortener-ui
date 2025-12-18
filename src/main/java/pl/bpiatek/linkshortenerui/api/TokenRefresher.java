@@ -40,8 +40,6 @@ public class TokenRefresher {
         log.info("performRefresh(): refresh token present={}", refreshToken != null);
 
         try {
-
-
             if (refreshToken == null || refreshToken.isBlank()) {
                 log.info("performRefresh(): no refresh token");
                 throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
