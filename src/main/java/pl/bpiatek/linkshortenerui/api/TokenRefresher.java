@@ -67,7 +67,7 @@ public class TokenRefresher {
         }
     }
 
-    private void clearCookies() {
+    public void clearCookies() {
         setCookie("jwt", "", 0);
         setCookie("refresh_jwt", "", 0);
     }
