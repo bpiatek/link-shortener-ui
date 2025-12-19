@@ -37,7 +37,7 @@ public class BackendErrorMapper {
                 }
             } else {
                 // Fallback if no BindingResult: show first error globally
-                model.addAttribute("error", apiError.validationErrors().get(0).message());
+                model.addAttribute("error", apiError.validationErrors().getFirst().message());
             }
         }
         // 2. Handle Logic Errors (409 Conflict, 404 Not Found, etc.)

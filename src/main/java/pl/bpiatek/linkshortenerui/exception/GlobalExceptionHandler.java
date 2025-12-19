@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientResponseException;
-
-import java.util.Base64;
+import pl.bpiatek.linkshortenerui.api.TokenExtractor;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -21,9 +20,11 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private final ObjectMapper objectMapper;
+    private final TokenExtractor tokenExtractor;
 
-    public GlobalExceptionHandler(ObjectMapper objectMapper) {
+    public GlobalExceptionHandler(ObjectMapper objectMapper, TokenExtractor tokenExtractor) {
         this.objectMapper = objectMapper;
+        this.tokenExtractor = tokenExtractor;
     }
 
     @ExceptionHandler(HttpClientErrorException.class)
@@ -71,18 +72,7 @@ public class GlobalExceptionHandler {
         if (jwt == null || jwt.isBlank()) {
             return null;
         }
-        try {
-            var parts = jwt.split("\\.");
-            if (parts.length < 2) {
-                return null;
-            }
 
-            var payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
-            var claims = objectMapper.readTree(payloadJson);
-
-            return claims.has("email") ? claims.get("email").asText() : null;
-        } catch (Exception e) {
-            return null;
-        }
+        return tokenExtractor.extractEmail(jwt);
     }
 }

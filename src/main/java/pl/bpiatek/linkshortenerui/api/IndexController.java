@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-class HomeController {
+class IndexController {
 
-    private static final Logger log = LoggerFactory.getLogger(HomeController.class);
+    private static final Logger log = LoggerFactory.getLogger(IndexController.class);
 
     private final TokenRefresher tokenRefresher;
     private final TokenExtractor tokenExtractor;
 
-    public HomeController(TokenRefresher tokenRefresher, TokenExtractor tokenExtractor) {
+    public IndexController(TokenRefresher tokenRefresher, TokenExtractor tokenExtractor) {
         this.tokenRefresher = tokenRefresher;
         this.tokenExtractor = tokenExtractor;
     }
@@ -29,10 +29,10 @@ class HomeController {
 
                 if (email != null) {
                     model.addAttribute("userEmail", email);
-                    log.info("Token refreshed successfully. User: {}", email);
+                    log.debug("Token refreshed successfully. User: {}", email);
                 }
             } catch (Exception e) {
-                log.warn("Failed to refresh token on index page. Treating user as logged out.", e);
+                log.debug("Failed to refresh token on index page. Treating user as logged out.", e);
                 model.addAttribute("userEmail", null);
             }
         }

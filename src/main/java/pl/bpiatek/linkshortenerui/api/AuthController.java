@@ -15,14 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
-import pl.bpiatek.linkshortenerui.dto.ForgotPasswordRequest;
 import pl.bpiatek.linkshortenerui.dto.LoginRequest;
 import pl.bpiatek.linkshortenerui.dto.LoginResponse;
 import pl.bpiatek.linkshortenerui.dto.LogoutRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterBackendRequest;
 import pl.bpiatek.linkshortenerui.dto.RegisterRequest;
-import pl.bpiatek.linkshortenerui.dto.ResetPasswordBackendRequest;
-import pl.bpiatek.linkshortenerui.dto.ResetPasswordRequest;
 import pl.bpiatek.linkshortenerui.exception.BackendErrorMapper;
 
 import java.net.URLEncoder;
@@ -76,7 +73,6 @@ class AuthController {
             return "redirect:/registration-pending?email=" + encodedEmail;
 
         } catch (HttpClientErrorException e) {
-            // REUSE: Maps validation errors to fields or global error
             errorMapper.map(e, bindingResult, model);
             return "register";
         } catch (Exception e) {
@@ -116,9 +112,7 @@ class AuthController {
             setJwtCookie(response, "refresh_jwt", tokenResponse.refreshToken(), 604800);
 
             return "redirect:/dashboard";
-
         } catch (HttpClientErrorException e) {
-            // REUSE: Handles 401 Bad Credentials or 400 Validation errors
             errorMapper.map(e, bindingResult, model);
             return "login";
         } catch (Exception e) {
@@ -136,86 +130,12 @@ class AuthController {
                     .toBodilessEntity();
 
             return "verified";
-
         } catch (HttpClientErrorException e) {
             errorMapper.map(e, model);
             return "verification-error";
         } catch (Exception e) {
             model.addAttribute("error", "An unexpected error occurred during verification.");
             return "verification-error";
-        }
-    }
-
-    @GetMapping("/forgot-password")
-    String forgotPasswordPage(Model model) {
-        model.addAttribute("forgotPasswordRequest", new ForgotPasswordRequest(""));
-        return "forgot-password";
-    }
-
-    @PostMapping("/forgot-password")
-    String performForgotPassword(
-            @ModelAttribute ForgotPasswordRequest request,
-            Model model) {
-        try {
-            apiGatewayClient.post()
-                    .uri("/users/auth/forgot-password")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
-                    .retrieve()
-                    .toBodilessEntity();
-
-            String encodedEmail = URLEncoder.encode(request.email(), StandardCharsets.UTF_8);
-            return "redirect:/forgot-password-pending?email=" + encodedEmail;
-
-        } catch (HttpClientErrorException e) {
-            errorMapper.map(e, model);
-            return "forgot-password";
-        } catch (Exception e) {
-            model.addAttribute("error", "An unexpected error occurred. Please try again later.");
-            return "forgot-password";
-        }
-    }
-
-    @GetMapping("/forgot-password-pending")
-    String forgotPasswordPendingPage(@RequestParam(required = false) String email, Model model) {
-        model.addAttribute("email", email);
-        return "forgot-password-pending";
-    }
-
-    @GetMapping("/reset-password")
-    String resetPasswordPage(@RequestParam("token") String token, Model model) {
-        model.addAttribute("resetPasswordForm", new ResetPasswordRequest(token, "", ""));
-        return "reset-password";
-    }
-
-    @PostMapping("/reset-password")
-    String performResetPassword(
-            @ModelAttribute ResetPasswordRequest form,
-            BindingResult bindingResult,
-            Model model) {
-        if (!form.password().equals(form.confirmPassword())) {
-            bindingResult.rejectValue("confirmPassword", "mismatch", "Passwords do not match");
-            return "reset-password";
-        }
-
-        try {
-            var backendRequest = new ResetPasswordBackendRequest(form.token(), form.password());
-
-            apiGatewayClient.post()
-                    .uri("/users/auth/reset-password")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(backendRequest)
-                    .retrieve()
-                    .toBodilessEntity();
-
-            return "redirect:/login?reset=true";
-
-        } catch (HttpClientErrorException e) {
-            errorMapper.map(e, bindingResult, model);
-            return "reset-password";
-        } catch (Exception e) {
-            model.addAttribute("error", "An unexpected error occurred.");
-            return "reset-password";
         }
     }
 
@@ -258,7 +178,7 @@ class AuthController {
     }
 
     private void clearCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, null);
+        var cookie = new Cookie(name, null);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setSecure(true);

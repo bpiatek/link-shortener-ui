@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import java.util.Base64;
 
 @Component
-class TokenExtractor {
+public class TokenExtractor {
 
     private final ObjectMapper objectMapper;
 

@@ -47,8 +47,7 @@ class DashboardController {
             Model model,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "created_at,desc") String sort
-    ) {
+            @RequestParam(defaultValue = "created_at,desc") String sort) {
         var responseType = new ParameterizedTypeReference<PageResponse<LinkDto>>() {};
 
         PageResponse<LinkDto> linkPage = null;
@@ -79,9 +78,10 @@ class DashboardController {
 
         model.addAttribute("page", linkPage);
 
-        if (linkPage != null && linkPage.content() != null) {
-            log.info("Rendering dashboard with {} links. First link: {}", linkPage.content().size(),
-                    linkPage.content().isEmpty() ? "None" : linkPage.content().get(0));
+        if (linkPage.content() != null) {
+            log.info("Rendering dashboard with {} links. First link: {}",
+                    linkPage.content().size(),
+                    linkPage.content().isEmpty() ? "None" : linkPage.content().getFirst());
         }
 
         return "dashboard";
@@ -107,14 +107,12 @@ class DashboardController {
             );
 
             redirectAttributes.addFlashAttribute("success", "Link created successfully!");
-
         } catch (RestClientResponseException e) {
             errorMapper.map(e, redirectAttributes);
 
             redirectAttributes.addFlashAttribute("longUrl", longUrl);
             redirectAttributes.addFlashAttribute("shortUrl", shortUrl);
             redirectAttributes.addFlashAttribute("title", title);
-
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "An unexpected error occurred.");
         }
@@ -125,7 +123,7 @@ class DashboardController {
     @GetMapping("/dashboard/links/{id}/edit")
     String editLinkPage(@PathVariable Long id, Model model, RedirectAttributes redirectAttributes) {
         try {
-            LinkDto link = backendApi.execute(jwt -> restClient.get()
+            var link = backendApi.execute(jwt -> restClient.get()
                     .uri("/links/{id}", id)
                     .header("Authorization", "Bearer " + jwt)
                     .retrieve()
@@ -139,7 +137,6 @@ class DashboardController {
             model.addAttribute("shortUrl", link.shortUrl());
 
             return "link-edit";
-
         } catch (HttpClientErrorException.NotFound e) {
             redirectAttributes.addFlashAttribute("error", "Link not found.");
             return "redirect:/dashboard";
@@ -169,15 +166,8 @@ class DashboardController {
 
             redirectAttributes.addFlashAttribute("success", "Link updated successfully!");
             return "redirect:/dashboard";
-
         } catch (RestClientResponseException e) {
-            // --- ERROR HANDLING ---
-
-            // 2. Map errors to BindingResult (fields) or Model (global)
             errorMapper.map(e, bindingResult, model);
-
-            // 3. Re-populate data required by the view (shortUrl)
-            // We need to fetch the link again because the POST request doesn't contain the shortUrl
             try {
                 LinkDto link = backendApi.execute(jwt -> restClient.get()
                         .uri("/links/{id}", id)
@@ -207,7 +197,6 @@ class DashboardController {
                     .toBodilessEntity()
             );
             redirectAttributes.addFlashAttribute("success", "Link deleted successfully.");
-
         } catch (RestClientResponseException e) {
             errorMapper.map(e, redirectAttributes);
         } catch (Exception e) {

@@ -18,7 +18,7 @@ import java.util.Arrays;
 
 @Service
 @RequestScope
-public class TokenRefresher {
+class TokenRefresher {
 
     private static final Logger log = LoggerFactory.getLogger(TokenRefresher.class);
 
@@ -26,22 +26,20 @@ public class TokenRefresher {
     private final HttpServletRequest request;
     private final HttpServletResponse response;
 
-    public TokenRefresher(RestClient restClient,
-                          HttpServletRequest request,
-                          HttpServletResponse response) {
+    TokenRefresher(RestClient restClient,
+                   HttpServletRequest request,
+                   HttpServletResponse response) {
         this.restClient = restClient;
         this.request = request;
         this.response = response;
     }
 
-    public String refreshAccessToken() {
+    String refreshAccessToken() {
         var refreshToken = getCookie("refresh_jwt");
-
-        log.info("performRefresh(): refresh token present={}", refreshToken != null);
 
         try {
             if (refreshToken == null || refreshToken.isBlank()) {
-                log.info("performRefresh(): no refresh token");
+                log.info("no refresh token");
                 throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Missing refresh token");
             }
 
@@ -52,14 +50,14 @@ public class TokenRefresher {
                     .retrieve()
                     .body(TokenResponse.class);
 
-            log.info("performRefresh(): refresh successful");
+            log.info("refresh successful");
 
             setCookie("jwt", tokens.accessToken(), 900);
             setCookie("refresh_jwt", tokens.refreshToken(), 604800);
 
             return tokens.accessToken();
         } catch (Exception e) {
-            log.info("performRefresh(): refresh failed", e);
+            log.error("refresh failed", e);
             clearCookies();
             throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED, "Refresh failed");
         }
@@ -72,24 +70,24 @@ public class TokenRefresher {
 
     private String getCookie(String name) {
         if (request.getCookies() == null) {
-            log.info("getCookieValue({}): no cookies present", name);
+            log.info("Cookies are not present");
             return null;
         }
 
         return Arrays.stream(request.getCookies())
                 .filter(c -> name.equals(c.getName()))
                 .map(c -> {
-                    log.info("getCookieValue({}): found", name);
+                    log.info("Cookie found: {}", name);
                     return  c.getValue();
                 })
                 .findAny().orElseGet(() -> {
-                    log.info("getCookieValue({}): not found", name);
+                    log.info("Cookie not found: {}", name);
                     return null;
                 });
     }
 
     private void setCookie(String name, String value, int maxAge) {
-        Cookie cookie = new Cookie(name, value);
+        var cookie = new Cookie(name, value);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
