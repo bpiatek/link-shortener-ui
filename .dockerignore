@@ -10,3 +10,6 @@ target/
 README.md
 Dockerfile
 .mvn/wrapper/maven-wrapper.jar
+
+# explicitly allow the extracted Spring Boot layers
+!target/extracted/

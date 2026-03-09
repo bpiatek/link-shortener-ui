@@ -26,66 +26,37 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Show Current User and Groups
-        run: |
-          id
-          groups
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          settings-path: ${{ github.workspace }}
 
       - name: Package with Maven
         run: mvn clean package -DskipTests
 
-      - name: Get Image Tag
-        id: get_tag
+      - name: Extract Spring Boot Layers
         run: |
-          TAG=$(git rev-parse --short HEAD)
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "Image tag set to $TAG"
+          java -Djarmode=layertools -jar target/*.jar extract --destination target/extracted
 
-      - name: Define Image Name
-        id: image_name
+      - name: Get Image Tag and Name
+        id: image_info
         run: |
-          NAME=link-shortener-ui
-          echo "name=$NAME" >> $GITHUB_OUTPUT
-          echo "Image name set to $NAME"
+          echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "name=link-shortener-notification-service" >> $GITHUB_OUTPUT
 
       - name: Build Docker Image
         run: |
-          docker build -t ${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }} .
-          echo "Docker image built: ${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }}"
-
-      - name: Verify microk8s availability and version
-        run: |
-          echo "PATH is $PATH"
-          microk8s status --wait-ready
-          microk8s version
-
-      - name: Debug PATH and microk8s path
-        run: |
-          echo $PATH
-          which microk8s
-          ls -l /snap/bin/microk8s
-          ls -l /usr/bin/snap
-          snap list
-
-      - name: Verify Docker Image Exists Before Import
-        run: |
-          echo "Checking if Docker image exists..."
-          docker image ls | grep ${{ steps.image_name.outputs.name }} | grep ${{ steps.get_tag.outputs.tag }}
-          echo "✅ Docker image is present"
+          # No secrets needed here anymore. It just copies the layers.
+          docker build -t ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }} .
+          echo "Docker image built: ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }}"
 
       - name: Import Image into MicroK8s
         run: |
-          echo "Importing image into microk8s..."
-          echo "${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }}"
-          set -x
-          docker save ${{ steps.image_name.outputs.name }}:${{ steps.get_tag.outputs.tag }} | sudo /snap/bin/microk8s ctr image import -
-          echo "✅ Image import completed"
-
-      - name: Debug MicroK8s Helm Access
-        run: |
-          set -x
-          sudo /snap/bin/microk8s status --wait-ready --timeout 30
-          sudo /snap/bin/microk8s helm version || echo "helm version failed"
+          docker save ${{ steps.image_info.outputs.name }}:${{ steps.image_info.outputs.tag }} | sudo /snap/bin/microk8s ctr image import -
+          echo "Image imported into MicroK8s."
 
       - name: Run Helm Upgrade
         run: |
@@ -96,7 +67,9 @@ jobs:
             ./helm \
             --namespace $TARGET_ENV \
             --values helm/values-$TARGET_ENV.yaml \
-            --set image.repository=${{ steps.image_name.outputs.name }} \
-            --set image.tag=${{ steps.get_tag.outputs.tag }} \
-            --set spring.profiles.active=$TARGET_ENV
+            --set image.repository=${{ steps.image_info.outputs.name }} \
+            --set image.tag=${{ steps.image_info.outputs.tag }} \
+            --set spring.profiles.active=$TARGET_ENV \
+            --atomic \
+            --timeout 3m
           echo "Helm deployment finished."
