@@ -23,8 +23,8 @@ spec:
         vault.hashicorp.com/role: {{ .Values.vault.role | quote }}
         vault.hashicorp.com/auth-path: "auth/kubernetes"
 
-        vault.hashicorp.com/agent-requests-cpu: { { .Values.vault.agent.resources.requests.cpu | quote }}
-        vault.hashicorp.com/agent-requests-mem: { { .Values.vault.agent.resources.requests.memory | quote }}
+        vault.hashicorp.com/agent-requests-cpu: {{ .Values.vault.agent.resources.requests.cpu | quote }}
+        vault.hashicorp.com/agent-requests-mem: {{ .Values.vault.agent.resources.requests.memory | quote }}
         vault.hashicorp.com/agent-limits-cpu: {{ .Values.vault.agent.resources.limits.cpu | quote }}
         vault.hashicorp.com/agent-limits-mem: {{ .Values.vault.agent.resources.limits.memory | quote }}
 
@@ -34,6 +34,7 @@ spec:
 
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name }}
+      terminationGracePeriodSeconds: 40
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
